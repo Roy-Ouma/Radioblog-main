@@ -1,0 +1,33 @@
+{
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "scripts": {
+    "start": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:admin\"",
+    "dev:server": "cd server && npm start",
+    "dev:client": "cd client && npm start",
+    "dev:admin": "cd admin && npm start",
+    "server": "cd server && npm start",
+    "client": "cd client && npm start",
+    "admin": "cd admin && npm start"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.83.0",
+    "axios": "^1.12.2",
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^7.0.0",
+    "mongoose": "^8.20.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.10",
+    "nodemon": "^3.1.10",
+    "pnpm": "^10.19.0"
+  },
+  "proxy": "http://localhost:8800"
+}

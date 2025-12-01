@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7-alpine
+    container_name: radioblog-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password123}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - radioblog
+    healthcheck:
+      test: echo 'db.adminCommand("ping")' | mongosh -u ${MONGO_USER:-admin} -p ${MONGO_PASSWORD:-password123} || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: radioblog-server
+    ports:
+      - "8800:8800"
+    environment:
+      NODE_ENV: production
+      DB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-password123}@mongodb:27017/radioblog?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
+      AUTH_EMAIL: ${AUTH_EMAIL:-}
+      AUTH_PASSWORD: ${AUTH_PASSWORD:-}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_KEY: ${SUPABASE_KEY:-}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY:-}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - radioblog
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: radioblog-client
+    ports:
+      - "3001:80"
+    environment:
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:8800/api}
+    depends_on:
+      - server
+    networks:
+      - radioblog
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+
+networks:
+  radioblog:
+    driver: bridge

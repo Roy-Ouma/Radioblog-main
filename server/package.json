@@ -1,0 +1,43 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "set NODE_OPTIONS=--openssl-legacy-provider && nodemon index.js",
+    "start": "set NODE_OPTIONS=--openssl-legacy-provider && node index.js",
+    "dev:server": "nodemon index.js",
+    "migrate:files": "node scripts/migrate-files-to-supabase.js",
+    "export:mongo": "node scripts/export-mongo-to-json.js",
+    "migrate:db": "node scripts/migrate-mongo-to-postgres.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@sentry/node": "^7.91.0",
+    "@supabase/supabase-js": "^2.31.0",
+    "axios": "^1.12.2",
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^7.1.5",
+    "firebase-admin": "^13.6.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.1",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.9",
+    "nodemon": "^3.1.10",
+    "pg": "^8.10.0"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=10.0.0"
+  }
+}

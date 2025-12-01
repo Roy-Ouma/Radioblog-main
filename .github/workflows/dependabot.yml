@@ -1,0 +1,23 @@
+name: Dependabot Updates
+on:
+  schedule:
+    # Check for updates weekly on Monday
+    - cron: '0 0 * * 1'
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package-manager:
+          - npm
+    steps:
+      - uses: dependabot/fetch-metadata@v2
+        id: metadata
+      - name: Dependabot auto-merge (patch/minor)
+        if: steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        run: |
+          gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
