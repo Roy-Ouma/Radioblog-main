@@ -1,10 +1,12 @@
-type: web
-name: my-express-server
-env: node
-plan: free # or 'starter', 'standard'
-buildCommand: npm install
-startCommand: npm start
-envVars:
-  - key: NODE_VERSION
-    value: 20.11.0 # Specify your preferred Node version
-autoDeploy: true
+ services:
+  - type: web
+    name: my-express-server
+    env: node
+    plan: free  # can also be 'starter' or 'standard'
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
+    autoDeploy: true
+
