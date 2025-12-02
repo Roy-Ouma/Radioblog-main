@@ -2,10 +2,13 @@ import axios from "axios";
 
 // Use relative `/api` by default so front-end requests are proxied in development
 // Set `REACT_APP_API_URL` to a full backend URL in production if needed.
-export const API_BASE_URL = process.env.REACT_APP_API_URL || "/api";
+const DEFAULT_CLIENT_RENDER = "https://masenoradio.onrender.com";
+export const API_BASE_URL =
+  process.env.REACT_APP_API_URL ||
+  (process.env.NODE_ENV === "production" ? `${DEFAULT_CLIENT_RENDER}/api` : "/api");
 
 const api = axios.create({
-  baseURL: "https://radioblog-mai.onrender.com/api",
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
