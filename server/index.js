@@ -42,7 +42,12 @@ const defaultOrigins = [
   "https://admin-9m1f.onrender.com",
   "https://masenoradio.onrender.com",
 ];
-const allowedOrigins = clientOrigins.length ? clientOrigins : defaultOrigins;
+// Always include the built-in `defaultOrigins` and merge any origins provided
+// via `CORS_ALLOWED_ORIGINS` so an incomplete env value doesn't accidentally
+// block valid deployed origins. Remove duplicates while preserving order.
+const allowedOrigins = Array.from(
+  new Set([...defaultOrigins, ...clientOrigins])
+);
 
 const corsOptions = {
   origin: (origin, callback) => {
