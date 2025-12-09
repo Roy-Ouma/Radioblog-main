@@ -260,7 +260,7 @@ router.get('/analytics', adminAuth, accessLog(), async (req, res) => {
       followersDiff: 0,
       viewsDiff: 0,
       writersDiff: 0,
-      viewStats: viewStats // <--- This fixes the Graph!
+      viewStats: viewStats
     });
 
   } catch (error) {
