@@ -4,6 +4,7 @@ import Comments from "../models/Comment.js";
 import Views from "../models/Views.js";
 import mongoose from "mongoose";
 import Followers from "../models/Followers.js";
+import { createUniqueSlug } from "../utils/slugUtils.js";
 
 const getUserIdFromRequest = (req) =>
   req.user?.userId || req.body?.user?.userId || req.body?.userId;
@@ -201,36 +202,34 @@ export const getPostContent = async (req, res, next) => {
 
 export const createPost = async (req, res, next) => {
   try {
-    const userId = ensureUser(req, res);
-    if (!userId) return;
-    const { desc, img, title, slug, cat } = req.body;
+    const { title, description, cat, status } = req.body;
 
-    if (!(desc || img || title || slug || cat)) {
-      return res.status(400).json({ success: false, message: "All fields are required. Please provide all required fields" });
+    if (!title) {
+      return next("Title is required!");
     }
-    const post = await Posts.create({
-      user: userId,
-      desc,
-      img,
+
+    // --- MAGIC HAPPENS HERE ---
+    // Pass the 'Posts' model so it checks the posts table
+    const slug = await createUniqueSlug(title, Posts);
+    // --------------------------
+
+    const newPost = await Posts.create({
       title,
-      slug,
-      cat
+      slug, // Save the unique slug
+      description,
+      cat,
+      user: req.user.userId,
+      status: status ?? false, // Default to draft if not provided
     });
-    // New posts are created as drafts and require approval from a General Admin
-    // Ensure approved is explicitly false on creation
-    if (post && typeof post.approved === 'undefined') {
-      post.approved = false;
-      await post.save();
-    }
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
-      message: 'Post created successfully',
-      data: post
+      message: "Post created successfully",
+      data: newPost,
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: error.message });
+    res.status(404).json({ message: error.message });
   }
 };
 
@@ -340,22 +339,21 @@ export const unlikePost = async (req, res, next) => {
 export const updatePost = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { title } = req.body;
+    
+    const post = await Posts.findById(id);
+    if (!post) return next("Post not found");
 
-    const post = await Posts.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
+    // Only regenerate slug if title changed
+    if (title && title !== post.title) {
+       req.body.slug = await createUniqueSlug(title, Posts, post.slug);
+    }
 
-    res.status(200).json({
-      success: true,
-      message: 'Post updated successfully',
-      data: post
-    });
+    const updatedPost = await Posts.findByIdAndUpdate(id, req.body, { new: true });
+    
+    res.status(200).json({ success: true, data: updatedPost });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: error.message });
+    res.status(404).json({ message: error.message });
   }
 };
 
@@ -609,4 +607,5 @@ export const getShareLink = async (req, res, next) => {
     console.error('getShareLink error', err);
     return res.status(500).json({ success: false, message: 'Unable to construct share link' });
   }
+
 };

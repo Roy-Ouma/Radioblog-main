@@ -12,6 +12,7 @@ import { useSearchParams } from "react-router-dom";
 const CategoriesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedCategory = searchParams.get("cat") || "All";
+  
   const initialPage = (() => {
     const parsed = Number(searchParams.get("page"));
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
@@ -31,7 +32,8 @@ const CategoriesPage = () => {
     try {
       setIsLoading(true);
       const params = { page, limit: PER_PAGE };
-      if (normalizedCategory && normalizedCategory.toLowerCase() !== "all") {
+      // Safety Check: Use optional chaining here too
+      if (normalizedCategory && normalizedCategory?.toLowerCase() !== "all") {
         params.cat = normalizedCategory;
       }
       const response = await fetchPosts(params);
@@ -91,7 +93,8 @@ const CategoriesPage = () => {
 
   const handleCategorySelect = (categoryLabel) => {
     const params = new URLSearchParams(searchParams);
-    if (categoryLabel.toLowerCase() === "all") {
+    // Safety Check: Ensure categoryLabel exists before using toLowerCase
+    if (categoryLabel?.toLowerCase() === "all") {
       params.delete("cat");
     } else {
       params.set("cat", categoryLabel);
@@ -117,9 +120,14 @@ const CategoriesPage = () => {
       {/* Category filters - responsive grid */}
       <section className="space-y-4">
         <div className="flex flex-wrap gap-2 md:gap-3">
-          {["All", ...categories.map((cat) => cat.label)].map((label) => {
-            const isActive = normalizedCategory.toLowerCase() === label.toLowerCase();
-            const categoryStyle = categories.find((cat) => cat.label === label)?.color || "bg-gray-600";
+          {/* FIX APPLIED HERE:
+             1. We filter out any undefined labels first (.filter(l => l))
+             2. We use label?.toLowerCase() inside the map just to be safe
+          */}
+          {["All", ...categories.map((cat) => cat?.label).filter(l => l)].map((label) => {
+            const isActive = normalizedCategory?.toLowerCase() === label?.toLowerCase();
+            const categoryStyle = categories.find((cat) => cat?.label === label)?.color || "bg-gray-600";
+            
             return (
               <button
                 key={label}
