@@ -15,10 +15,14 @@ const PopularPost = ({ posts = [] }) => {
           const serverCats = Array.isArray(res.data) ? res.data : [];
           const base = Array.isArray(CATEGORIES) ? CATEGORIES : [];
           const map = new Map();
-          base.forEach((c) => c?.label && map.set(c.label, c));
+          base.forEach((c) => {
+            const key = String(c?.label || "").trim().toUpperCase();
+            if (key) map.set(key, c);
+          });
           serverCats.forEach((c) => {
-            if (!c || !c.label) return;
-            if (!map.has(c.label)) map.set(c.label, c);
+            const key = String(c?.label || "").trim().toUpperCase();
+            if (!key) return;
+            if (!map.has(key)) map.set(key, c);
           });
           setCategories(Array.from(map.values()));
         }

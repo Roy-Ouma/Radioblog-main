@@ -78,12 +78,16 @@ const CategoriesPage = () => {
           const serverCats = Array.isArray(res.data) ? res.data : [];
           const base = Array.isArray(CATEGORIES) ? CATEGORIES : [];
           const map = new Map();
-          // keep base categories first
-          base.forEach((c) => c?.label && map.set(c.label, c));
-          // add/merge server categories but don't remove base ones
+          // keep base categories first; use case-insensitive keys so we don't create duplicates
+          base.forEach((c) => {
+            const key = String(c?.label || "").trim().toUpperCase();
+            if (key) map.set(key, c);
+          });
+          // add/merge server categories but don't override base ones (case-insensitive)
           serverCats.forEach((c) => {
-            if (!c || !c.label) return;
-            if (!map.has(c.label)) map.set(c.label, c);
+            const key = String(c?.label || "").trim().toUpperCase();
+            if (!key) return;
+            if (!map.has(key)) map.set(key, c);
           });
           setCategories(Array.from(map.values()));
         }
