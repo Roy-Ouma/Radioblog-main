@@ -6,5 +6,16 @@ export const CATEGORIES = [
   { label: "FASHION", value: "FASHION" },
   { label: "TRAVEL", value: "TRAVEL" },
   { label: "FOOD", value: "FOOD" },
+  { label: "LIFESTYLE", value: "LIFESTYLE" },
+  { label: "HEALTH", value: "HEALTH" },
+  { label: "SCIENCE", value: "SCIENCE" },
+  { label: "POLITICS", value: "POLITICS" },
+  { label: "FEATURES", value: "FEATURES" },
+  { label: "TECHNOLOGY", value: "TECHNOLOGY" },
+  { label: "BUSINESS", value: "BUSINESS" },
+  { label: "ENTERTAINMENT", value: "ENTERTAINMENT" },
+  { label: "OPINION", value: "OPINION" },
+  { label: "CULTURE", value: "CULTURE" },
+  { label: "ART", value: "ART" },
 ];
 

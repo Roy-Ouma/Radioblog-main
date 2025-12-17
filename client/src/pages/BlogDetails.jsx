@@ -12,6 +12,7 @@ import { FaTwitter, FaFacebookF, FaWhatsapp } from 'react-icons/fa';
 import { FiLink } from 'react-icons/fi';
 import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai';
 import { likePost, unlikePost } from '../utils/apiCalls';
+import { CATEGORIES } from '../utils/constants';
 
 const BlogDetails = () => {
   const store = useStore();
@@ -141,6 +142,9 @@ const BlogDetails = () => {
       isMounted = false;
     };
   }, []);
+
+  // categories are sourced from shared constants to match site-wide styling
+  const categories = CATEGORIES;
 
   if (isFetchingPost && !post) {
     return (
@@ -308,6 +312,23 @@ const BlogDetails = () => {
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-10">
           <div className="sticky top-24 space-y-10">
+              {/* Categories - always visible */}
+              <div className="bg-white dark:bg-[#071020] shadow-sm rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Categories</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat.label}
+                      to={`/category?cat=${encodeURIComponent(cat.label)}`}
+                      className={`${cat.color} text-white font-semibold text-xs md:text-sm px-3 py-2.5 rounded-lg hover:shadow-md transition-all duration-300 transform hover:scale-105 flex items-center gap-2 text-center`}
+                      aria-label={`Open ${cat.label} category`}
+                    >
+                      <span className="text-lg">{cat.icon}</span>
+                      <span className="truncate hidden sm:inline">{cat.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             <PopularPost posts={popularContent.posts} />
             <PopularWriter data={popularContent.writers} />
           </div>

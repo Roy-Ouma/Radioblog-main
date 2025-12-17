@@ -27,7 +27,6 @@ const mockdata = [
     { icon: IconCalendarStats, label: "Pending", to: "pending" },
     { icon: IconCalendarStats, label: "Share Logs", to: "share-logs" },
     { icon: IconCalendarStats, label: "Banners", to: "banners" },
-    { icon: IconCalendarStats, label: "Categories", to: "categories" },
   { icon: IconUser, label: "Followers", to: "followers" },
   { icon: BsPencilSquare, label: "Create Post", to: "write" },
   { icon: IconSettings, label: "Settings" },
