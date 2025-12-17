@@ -11,7 +11,17 @@ const PopularPost = ({ posts = [] }) => {
     fetchCategories()
       .then((res) => {
         if (!mounted) return;
-        if (res?.success) setCategories(res.data || CATEGORIES);
+        if (res?.success) {
+          const serverCats = Array.isArray(res.data) ? res.data : [];
+          const base = Array.isArray(CATEGORIES) ? CATEGORIES : [];
+          const map = new Map();
+          base.forEach((c) => c?.label && map.set(c.label, c));
+          serverCats.forEach((c) => {
+            if (!c || !c.label) return;
+            if (!map.has(c.label)) map.set(c.label, c);
+          });
+          setCategories(Array.from(map.values()));
+        }
       })
       .catch(() => {});
     return () => (mounted = false);

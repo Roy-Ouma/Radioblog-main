@@ -69,10 +69,27 @@ const CategoriesPage = () => {
       }
     };
     loadPopular();
-    // load dynamic categories
-    fetchCategories().then((res) => {
-      if (res?.success) setCategories(res.data || CATEGORIES);
-    }).catch(()=>{});
+
+    // load dynamic categories but preserve built-in categories
+    fetchCategories()
+      .then((res) => {
+        if (!isMounted) return;
+        if (res?.success) {
+          const serverCats = Array.isArray(res.data) ? res.data : [];
+          const base = Array.isArray(CATEGORIES) ? CATEGORIES : [];
+          const map = new Map();
+          // keep base categories first
+          base.forEach((c) => c?.label && map.set(c.label, c));
+          // add/merge server categories but don't remove base ones
+          serverCats.forEach((c) => {
+            if (!c || !c.label) return;
+            if (!map.has(c.label)) map.set(c.label, c);
+          });
+          setCategories(Array.from(map.values()));
+        }
+      })
+      .catch(() => {});
+
     return () => {
       isMounted = false;
     };
@@ -113,7 +130,9 @@ const CategoriesPage = () => {
           {normalizedCategory || "All"}
         </h1>
         <p className="text-sm md:text-base text-slate-500 dark:text-slate-400">
-          Explore the latest posts from your favourite categories.
+          {normalizedCategory && normalizedCategory.toLowerCase() !== "all"
+            ? `Explore the latest posts from your favourite category: ${normalizedCategory}.`
+            : "Explore the latest posts from your favourite categories."}
         </p>
       </section>
 
