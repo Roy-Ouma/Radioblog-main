@@ -6,8 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import useStore from "../store";
 import Logo from '../components/Logo';
 import ThemeSwitch from './Switch';
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 // simple search box component placed inside Navbar
 const SearchBox = () => {
