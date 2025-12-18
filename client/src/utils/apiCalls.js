@@ -364,3 +364,38 @@ export const resetPasswordComplete = async (payload) => {
     return { success: false, message };
   }
 };
+
+// Podcasts API
+export const fetchPodcasts = async (params = {}) => {
+  try {
+    const { data } = await api.get('/podcasts', { params });
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Fetching podcasts failed:', message);
+    return { success: false, message };
+  }
+};
+
+export const fetchPodcastById = async (id) => {
+  try {
+    const { data } = await api.get(`/podcasts/${id}`);
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Fetching podcast failed:', message);
+    return { success: false, message };
+  }
+};
+
+export const adminCreatePodcast = async (payload, token) => {
+  try {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
+    const { data } = await api.post('/admin/podcasts', payload, config);
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Creating podcast failed:', message);
+    return { success: false, message };
+  }
+};

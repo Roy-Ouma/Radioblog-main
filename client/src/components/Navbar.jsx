@@ -78,6 +78,7 @@ const Navbar = () => {
           <ul className='flex gap-6 md:gap-8 text-base text-black dark:text-white items-center'>
             <li><Link to='/' className='hover:text-red-600 dark:hover:text-red-600 transition-colors'>Home</Link></li>
             <li><Link to='/live' className='hover:text-orange-500 dark:hover:text-orange-400 font-semibold transition-colors'>Live</Link></li>
+            <li><Link to='/podcasts' className='hover:text-green-600 dark:hover:text-green-400 transition-colors'>Podcasts</Link></li>
           </ul>
 
           {/* Search bar */}
@@ -165,8 +166,9 @@ const Navbar = () => {
 
               <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
 
-              {/* Mobile search */}
-              <div>
+              {/* Mobile podcast link and search */}
+              <Link to='/podcasts' onClick={() => setMobileOpen(false)} className='text-base text-black dark:text-white'>Podcasts</Link>
+              <div className="mt-4">
                 <SearchBox />
               </div>
 

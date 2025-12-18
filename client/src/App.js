@@ -11,6 +11,8 @@ import { LoginPage, SignupPage } from "./pages";
 import Loading from "./components/Loading";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import Podcasts from "./pages/Podcasts";
+import PodcastDetail from "./pages/PodcastDetail";
 import useStore from "./store";
 import { useEffect } from "react";
 import Contact from "./pages/Contact"; // Add this import
@@ -74,6 +76,8 @@ function App() {
               <Route element={<Layout />}> 
                 <Route path="/" element={<Home />} />
                 <Route path="/category" element={<CategoriesPage />} />
+                <Route path="/podcasts" element={<Podcasts />} />
+                <Route path="/podcast/:id" element={<PodcastDetail />} />
                 <Route path="/blog" element={<Home />} />
                 <Route path="/live" element={<Live />} />
                 <Route path="/:slug/:id?" element={<BlogDetails />} />
