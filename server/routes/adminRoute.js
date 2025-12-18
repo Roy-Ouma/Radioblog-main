@@ -7,6 +7,7 @@ import Followers from '../models/Followers.js';
 import { fetchShareLogs } from '../controllers/shareController.js';
 import { getAllBanners, createBanner, updateBanner, deleteBanner } from '../controllers/bannerController.js';
 import { createCategory, updateCategory, deleteCategory } from '../controllers/categoryController.js';
+import { createPodcast as adminCreatePodcast } from '../controllers/podcastController.js';
 
 const router = express.Router();
 
@@ -190,6 +191,17 @@ router.get('/categories', adminAuth, accessLog(), async (req, res) => {
 router.post('/categories', generalAdminAuth, accessLog(), createCategory);
 router.patch('/categories/:id', generalAdminAuth, accessLog(), updateCategory);
 router.delete('/categories/:id', generalAdminAuth, accessLog(), deleteCategory);
+
+// Admin: create podcast (expects JSON with audioUrl and thumbnail URLs, or admin UI should upload files first to /api/storage/upload)
+router.post('/podcasts', generalAdminAuth, accessLog(), async (req, res) => {
+  try {
+    // delegate to controller
+    return adminCreatePodcast(req, res);
+  } catch (err) {
+    console.error('POST /admin/podcasts error', err);
+    return res.status(500).json({ success: false, message: 'Unable to create podcast' });
+  }
+});
 
 // DELETE /api/admin/followers/:id - remove a follower record (admin)
 router.delete('/followers/:id', adminAuth, accessLog(), async (req, res) => {
