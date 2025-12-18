@@ -2,6 +2,7 @@ import {
   Button,
   Group,
   TextInput,
+  Select,
   useMantineColorScheme,
   Progress,
   Text,
@@ -39,6 +40,7 @@ const SignUpForm = ({ toast, isSignin, setIsSignin, toggle, setFormClose }) => {
       email: "",
       firstName: "",
       lastName: "",
+      accountType: "Writer",
     },
     validate: {
       firstName: (value) =>
@@ -63,11 +65,15 @@ const SignUpForm = ({ toast, isSignin, setIsSignin, toggle, setFormClose }) => {
     }
     setFormClose(true);
 
+    // Ensure only allowed account types are sent
+    const allowed = ["Writer", "Admin"];
+    const chosen = allowed.includes(values.accountType) ? values.accountType : "Writer";
+
     const res = mutate({
       ...values,
       password: passValue,
       image: fileURL,
-      accountType: "Writer",
+      accountType: chosen,
     });
   };
 
@@ -166,6 +172,12 @@ const SignUpForm = ({ toast, isSignin, setIsSignin, toggle, setFormClose }) => {
         label='Email Address'
         placeholder='your@email.com'
         {...form.getInputProps("email")}
+      />
+
+      <Select
+        label="Account Type"
+        data={[{ value: "Writer", label: "Writer" }, { value: "Admin", label: "Admin" }]}
+        {...form.getInputProps("accountType")}
       />
 
       <PasswordStrength
