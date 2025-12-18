@@ -25,6 +25,10 @@ const CategoriesPage = () => {
   const [popularContent, setPopularContent] = useState({ posts: [], writers: [] });
 
   const normalizedCategory = useMemo(() => selectedCategory.trim(), [selectedCategory]);
+  const searchTerm = (() => {
+    const s = searchParams.get("search") || searchParams.get("q");
+    return s ? String(s).trim() : "";
+  })();
   const PER_PAGE = 6;
   const [categories, setCategories] = useState(CATEGORIES);
 
@@ -36,6 +40,7 @@ const CategoriesPage = () => {
       if (normalizedCategory && normalizedCategory?.toLowerCase() !== "all") {
         params.cat = normalizedCategory;
       }
+      if (searchTerm) params.search = searchTerm;
       const response = await fetchPosts(params);
       if (response?.success) {
         setPosts(response.data || []);

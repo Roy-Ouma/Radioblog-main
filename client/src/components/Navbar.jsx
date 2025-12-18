@@ -6,6 +6,37 @@ import { useNavigate } from 'react-router-dom';
 import useStore from "../store";
 import Logo from '../components/Logo';
 import ThemeSwitch from './Switch';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+// simple search box component placed inside Navbar
+const SearchBox = () => {
+  const [q, setQ] = useState("");
+  const navigate = useNavigate();
+
+  const submit = (e) => {
+    e?.preventDefault?.();
+    const term = String(q || "").trim();
+    if (!term) return;
+    // navigate to category page with search param (server supports `search` query)
+    navigate(`/category?search=${encodeURIComponent(term)}`);
+    setQ("");
+  };
+
+  return (
+    <form onSubmit={submit} className="w-full">
+      <div className="relative">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search posts..."
+          className="w-full px-3 py-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+        />
+        <button type="submit" aria-label="Search" className="absolute right-1 top-1/2 -translate-y-1/2 px-3 py-1 rounded-full bg-black text-white text-sm">Go</button>
+      </div>
+    </form>
+  );
+};
 
 const Navbar = () => {
   const { user } = useStore();
@@ -46,12 +77,15 @@ const Navbar = () => {
 
         {/* Desktop nav links (center/right) */}
         <div className='hidden md:flex flex-1 items-center justify-center'>
-          <ul className='flex gap-6 md:gap-8 text-base text-black dark:text-white'>
+          <ul className='flex gap-6 md:gap-8 text-base text-black dark:text-white items-center'>
             <li><Link to='/' className='hover:text-red-600 dark:hover:text-red-600 transition-colors'>Home</Link></li>
             <li><Link to='/live' className='hover:text-orange-500 dark:hover:text-orange-400 font-semibold transition-colors'>Live</Link></li>
-            <li><Link to='/contact' className='hover:text-red-600 dark:hover:text-red-600 transition-colors'>Contact</Link></li>
-            <li><Link to='/about' className='hover:text-red-600 dark:hover:text-red-600 transition-colors'>About</Link></li>
           </ul>
+
+          {/* Search bar */}
+          <div className="ml-6 w-80">
+            <SearchBox />
+          </div>
         </div>
 
         {/* Right: theme + sign-in + profile (desktop) */}
@@ -133,8 +167,10 @@ const Navbar = () => {
 
               <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
 
-              <Link to='/contact' onClick={() => setMobileOpen(false)} className='text-base text-black dark:text-white'>Contact</Link>
-              <Link to='/about' onClick={() => setMobileOpen(false)} className='text-base text-black dark:text-white'>About</Link>
+              {/* Mobile search */}
+              <div>
+                <SearchBox />
+              </div>
 
               <div className="mt-6 flex items-center gap-3">
                 <ThemeSwitch />
