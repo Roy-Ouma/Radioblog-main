@@ -148,7 +148,7 @@ const SignUpForm = ({ toast, isSignin, setIsSignin, toggle, setFormClose }) => {
   return (
     <form
       onSubmit={form.onSubmit(handleSubmit)}
-      className='flex flex-col gap-3'
+      className='flex flex-col gap-3 p-6 md:p-8 rounded-lg my-6 mx-auto max-w-2xl'
     >
       <div className='w-full flex gap-2 '>
         <TextInput
