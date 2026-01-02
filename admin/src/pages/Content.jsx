@@ -2,7 +2,8 @@ import {
   Button,
   Menu,
   Pagination,
-  Table,
+  Badge,
+  Group,
   useMantineColorScheme,
 } from "@mantine/core";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -87,149 +88,152 @@ const Contents = () => {
   return (
     <>
       <div className='w-full h-full flex flex-col p-6'>
-        <h2 className='section-header'>
-          Contents ({" "}
-          <span>
-            {data?.data?.length * data?.page +
-              " of " +
-              data?.totalPost +
-              " records"}
-          </span>
-          )
-        </h2>
-
-        <div className='table-container overflow-x-auto flex-1 mb-4'>
-          <Table highlightOnHover withTableBorder>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th className='bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'>Post Title</Table.Th>
-                <Table.Th className='bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'>Approved</Table.Th>
-                <Table.Th className='bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'>Category</Table.Th>
-                <Table.Th className='bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'>Views</Table.Th>
-                <Table.Th className='bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'>Comments</Table.Th>
-                <Table.Th className='bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'>Post Date</Table.Th>
-                <Table.Th className='bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'>Status</Table.Th>
-                <Table.Th className='bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'>Action</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-
-            <Table.Tbody>
-              {data?.data?.length > 0 &&
-                data.data.map((el) => (
-                  <Table.Tr
-                    key={el._id}
-                    className='hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-b border-slate-200 dark:border-slate-700'
-                  >
-                    <Table.Td className='flex gap-2 items-center text-slate-900 dark:text-white'>
-                      <img
-                        src={el?.img}
-                        alt={el?.title}
-                        className='w-10 h-10 rounded-full object-cover'
-                      />
-
-                      <p className='text-base'>{el?.title}</p>
-                    </Table.Td>
-
-                    <Table.Td className='text-slate-900 dark:text-white'>
-                      {el?.approved ? (
-                        <div className="text-sm">
-                          <div>By: {el?.approvedBy?.name || "—"}</div>
-                          <div className='muted'>
-                            {el?.approvedAt
-                              ? new Date(el.approvedAt).toLocaleString()
-                              : ""}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-yellow-600 dark:text-yellow-400 font-semibold">Pending</span>
-                      )}
-                    </Table.Td>
-
-                    <Table.Td className='text-slate-900 dark:text-white'>{el?.cat}</Table.Td>
-
-                    <Table.Td className='text-slate-900 dark:text-white'>
-                      <div className='flex gap-1 items-center'>
-                        <AiOutlineEye size={18} />
-                        {formatNumber(el?.views?.length)}
-                      </div>
-                    </Table.Td>
-
-                    <Table.Td
-                      onClick={() => handleComment(el?._id, el?.comments?.length)}
-                      className='text-slate-900 dark:text-white cursor-pointer hover:text-orange-600 dark:hover:text-orange-400'
-                    >
-                      <div className='flex gap-1 items-center'>
-                        <MdMessage size={18} className='text-slate-500 dark:text-slate-400' />
-                        {formatNumber(el?.comments?.length)}
-                      </div>
-                    </Table.Td>
-
-                    <Table.Td className='text-slate-900 dark:text-white'>{moment(el?.createdAt).fromNow()}</Table.Td>
-
-                    <Table.Td>
-                      <span
-                        className={`${
-                          el?.status
-                            ? "bg-green-600 dark:bg-green-700 text-white"
-                            : "bg-red-600 dark:bg-red-700 text-white"
-                        } rounded-full font-semibold px-4 py-1.5 text-sm`}
-                      >
-                        {el?.status === true ? "Active" : "Disabled"}
-                      </span>
-                    </Table.Td>
-
-                    <Table.Td width={5}>
-                      <Menu
-                        transitionProps={{
-                          transition: "rotate-right",
-                          duration: 150,
-                        }}
-                        shadow='lg'
-                        width={200}
-                      >
-                        <Menu.Target>
-                          <Button className='dark:text-white'>
-                            <BiDotsVerticalRounded
-                              className='text-lg'
-                            />
-                          </Button>
-                        </Menu.Target>
-
-                        <Menu.Dropdown>
-                          <Menu.Item
-                            leftSection={<AiOutlineSetting />}
-                            onClick={() =>
-                              handlePerformAction("status", el?._id, !el?.status)
-                            }
-                          >
-                            {el?.status ? "Disable" : "Enable"}
-                          </Menu.Item>
-
-                          <Menu.Divider />
-
-                          <Menu.Label>Danger zone</Menu.Label>
-
-                          <Menu.Item
-                            color='red'
-                            leftSection={<MdOutlineDeleteOutline />}
-                            onClick={() => handlePerformAction("delete", el?._id)}
-                          >
-                            Delete Post
-                          </Menu.Item>
-                        </Menu.Dropdown>
-                      </Menu>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-            </Table.Tbody>
-          </Table>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className='section-header'>
+              All Posts
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+              Total: {data?.totalPost || 0} posts
+              {data?.data?.length ? ` • Showing ${(data?.page - 1) * data?.data?.length + 1}-${Math.min((data?.page || 1) * data?.data?.length, data?.totalPost || 0)}` : ""}
+            </p>
+          </div>
         </div>
 
-        <div className='w-full flex items-center justify-center section-container'>
+        {isPending ? (
+          <div className="flex items-center justify-center py-16 section-container">
+            <div className="text-slate-600 dark:text-slate-400">Loading posts...</div>
+          </div>
+        ) : data?.data?.length === 0 ? (
+          <div className="section-container text-center py-16">
+            <p className="text-slate-600 dark:text-slate-400">No posts found.</p>
+          </div>
+        ) : (
+          <div className="space-y-4 flex-1 overflow-y-auto">
+            {data?.data?.map((post) => (
+              <div
+                key={post._id}
+                className="section-container group hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-32 h-20 flex-shrink-0">
+                    <img
+                      src={post.img}
+                      alt={post.title}
+                      className="w-full h-full object-cover rounded-md"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white break-words">
+                        {post.title}
+                      </h3>
+                      <Badge
+                        size="sm"
+                        variant="light"
+                        color={post.approved ? "green" : "yellow"}
+                      >
+                        {post.approved ? "✓ Approved" : "⏳ Pending"}
+                      </Badge>
+                      <Badge size="sm" variant="filled" color="indigo">
+                        {post.cat || "Uncategorized"}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3">
+                      {(post.desc || post.description || "").slice(0, 150)}
+                    </p>
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                        <AiOutlineEye size={16} />
+                        <span>{formatNumber(post.views?.length || 0)} views</span>
+                      </div>
+                      <div
+                        onClick={() => handleComment(post._id, post.comments?.length || 0)}
+                        className="flex items-center gap-1 text-slate-600 dark:text-slate-400 cursor-pointer hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                      >
+                        <MdMessage size={16} />
+                        <span>{formatNumber(post.comments?.length || 0)} comments</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                        <span>{moment(post.createdAt).fromNow()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 min-w-max">
+                    <div className="mb-3">
+                      <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {post.user?.name || "Unknown"}
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {post.user?.email}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <span
+                        className={`inline-block px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+                          post.status
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                        }`}
+                      >
+                        {post.status ? "Active" : "Disabled"}
+                      </span>
+                    </div>
+                    <Menu
+                      transitionProps={{
+                        transition: "rotate-right",
+                        duration: 150,
+                      }}
+                      shadow="lg"
+                      position="bottom-end"
+                    >
+                      <Menu.Target>
+                        <Button
+                          size="sm"
+                          variant="light"
+                          className="dark:text-white"
+                        >
+                          <BiDotsVerticalRounded className="text-lg" />
+                        </Button>
+                      </Menu.Target>
+
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          leftSection={<AiOutlineSetting size={16} />}
+                          onClick={() =>
+                            handlePerformAction("status", post._id, !post.status)
+                          }
+                        >
+                          {post.status ? "Disable Post" : "Enable Post"}
+                        </Menu.Item>
+
+                        <Menu.Divider />
+
+                        <Menu.Label>Danger zone</Menu.Label>
+
+                        <Menu.Item
+                          color="red"
+                          leftSection={<MdOutlineDeleteOutline size={16} />}
+                          onClick={() =>
+                            handlePerformAction("delete", post._id)
+                          }
+                        >
+                          Delete Post
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className='w-full flex items-center justify-center section-container mt-6'>
           <Pagination
-            total={data?.numOfPage}
+            total={data?.numOfPage || 1}
             siblings={1}
-            defaultValue={data?.page}
+            value={parseInt(page)}
             withEdges
             onChange={(value) => setPage(value)}
           />

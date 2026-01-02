@@ -12,6 +12,7 @@ import Loading from "./components/Loading";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Podcasts from "./pages/Podcasts";
+import PodcastShowDetail from "./pages/PodcastShowDetail";
 import PodcastDetail from "./pages/PodcastDetail";
 import useStore from "./store";
 import { useEffect } from "react";
@@ -77,6 +78,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/category" element={<CategoriesPage />} />
                 <Route path="/podcasts" element={<Podcasts />} />
+                <Route path="/podcasts/:id" element={<PodcastShowDetail />} />
                 <Route path="/podcast/:id" element={<PodcastDetail />} />
                 <Route path="/blog" element={<Home />} />
                 <Route path="/live" element={<Live />} />

@@ -160,14 +160,22 @@ export const getFollowers = async (req, res, next) => {
 
 export const getPostContent = async (req, res, next) => {
   try {
-    const userId = ensureUser(req, res);
-    if (!userId) return;
+    // If this request was authenticated via `adminAuth`, `req.currentUser` will be set
+    // and we should return all posts (approved and unapproved). Otherwise return
+    // only the posts belonging to the requesting user.
+    const isAdminRequest = Boolean(req.currentUser);
 
-    let queryResult = Posts.find({
-      user: userId
-    }).sort({ _id: -1 });
+    let filter = {};
+    if (!isAdminRequest) {
+      const userId = ensureUser(req, res);
+      if (!userId) return;
+      filter.user = userId;
+    }
 
-    // For admin content listing, include who approved the post (if any)
+    let queryResult = Posts.find(filter).sort({ _id: -1 });
+
+    // Include author and who approved the post (if any)
+    queryResult = queryResult.populate({ path: 'user', select: 'name email image' });
     queryResult = queryResult.populate({ path: 'approvedBy', select: 'name email' });
 
     // pagination
@@ -176,9 +184,7 @@ export const getPostContent = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     // records count
-    const totalPost = await Posts.countDocuments({
-      user: userId
-    });
+    const totalPost = await Posts.countDocuments(filter);
 
     const numOfPage = Math.ceil(totalPost / limit);
 
@@ -429,23 +435,35 @@ export const getPosts = async (req, res, next) => {
 export const getPopularContents = async (req, res, next) => {
   try {
     const posts = await Posts.aggregate([
+      { $match: { status: true, approved: true } },
       {
-        $match: { status: true, approved: true }
+        $addFields: {
+          viewsCount: { $size: { $ifNull: ["$views", []] } }
+        }
       },
+      { $sort: { viewsCount: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
       {
         $project: {
+          _id: 1,
           title: 1,
           slug: 1,
           img: 1,
           cat: 1,
-          views: { $size: { $ifNull: ["$views", []] } },
-          createdAt: 1
+          views: '$viewsCount',
+          createdAt: 1,
+          user: { _id: '$user._id', name: '$user.name', image: '$user.image' }
         }
-      },
-      {
-        $sort: { views: -1 },
-      },
-      { $limit: 5 }
+      }
     ]);
 
     const writers = await Users.aggregate([

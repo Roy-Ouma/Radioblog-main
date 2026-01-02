@@ -16,6 +16,9 @@ import ShareLogs from "./pages/ShareLogs";
 import Banners from "./pages/Banners";
 import Categories from "./pages/Categories";
 import CreatePodcast from "./pages/CreatePodcast";
+import CreateShow from "./pages/CreateShow";
+import PodcastsList from "./pages/PodcastsList";
+import ShowEpisodes from "./pages/ShowEpisodes";
 
 function Layout() {
   const { user } = useStore((state) => state);
@@ -55,7 +58,10 @@ function App() {
           <Route path='/pending' element={<PendingPosts />} />
           <Route path='/share-logs' element={<ShareLogs />} />
           <Route path='/banners' element={<Banners />} />
-          <Route path='/podcasts' element={<CreatePodcast />} />
+          <Route path='/podcasts' element={<PodcastsList />} />
+          <Route path='/podcasts/create' element={<CreatePodcast />} />
+          <Route path='/podcasts/create-show' element={<CreateShow />} />
+          <Route path='/podcasts/:id/episodes' element={<ShowEpisodes />} />
           <Route path='/write/:postId?' element={<WritePost />} />
         </Route>
 

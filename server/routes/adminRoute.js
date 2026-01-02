@@ -7,7 +7,9 @@ import Followers from '../models/Followers.js';
 import { fetchShareLogs } from '../controllers/shareController.js';
 import { getAllBanners, createBanner, updateBanner, deleteBanner } from '../controllers/bannerController.js';
 import { createCategory, updateCategory, deleteCategory } from '../controllers/categoryController.js';
-import { createPodcast as adminCreatePodcast } from '../controllers/podcastController.js';
+import { createPodcast as adminCreatePodcast, adminGetPodcasts, updatePodcast, deletePodcast } from '../controllers/podcastController.js';
+import { createShow, getShows as adminGetShows, updateShow, deleteShow } from '../controllers/showController.js';
+import { createEpisode, updateEpisode, deleteEpisode } from '../controllers/episodeController.js';
 
 const router = express.Router();
 
@@ -141,6 +143,46 @@ router.post('/posts/:id/unapprove', generalAdminAuth, accessLog(), async (req, r
   }
 });
 
+// PATCH /api/admin/posts/:id - edit a post (admin or original author can edit before approval, admins can always edit)
+router.patch('/posts/:id', adminAuth, accessLog(), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, desc, description, img, cat } = req.body;
+    const Posts = (await import('../models/Posts.js')).default;
+    
+    const post = await Posts.findById(id).populate({ path: 'user', select: 'name email' });
+    if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
+
+    // Allow edit if: user is admin OR user is the original author
+    const isAuthor = req.user?.userId?.toString() === post.user?._id?.toString();
+    const canEdit = req.currentUser?.isGeneralAdmin || isAuthor;
+    
+    if (!canEdit) {
+      return res.status(403).json({ success: false, message: 'You do not have permission to edit this post' });
+    }
+
+    // Update allowed fields (handle both desc and description for backwards compatibility)
+    if (title !== undefined && title.trim()) post.title = title;
+    const descValue = desc || description;
+    if (descValue !== undefined && descValue.trim()) post.desc = descValue;
+    if (img !== undefined) post.img = img;
+    if (cat !== undefined) post.cat = cat;
+
+    const updated = await post.save();
+    return res.json({ 
+      success: true, 
+      message: 'Post updated successfully',
+      data: await updated.populate([
+        { path: 'user', select: 'name email image' },
+        { path: 'approvedBy', select: 'name email' }
+      ])
+    });
+  } catch (err) {
+    console.error('PATCH /admin/posts/:id error', err);
+    return res.status(500).json({ success: false, message: 'Unable to update post' });
+  }
+});
+
 // GET /api/admin/posts/pending - list unapproved posts (admins)
 router.get('/posts/pending', adminAuth, accessLog(), async (req, res) => {
   try {
@@ -154,7 +196,9 @@ router.get('/posts/pending', adminAuth, accessLog(), async (req, res) => {
     const filter = { $or: [{ approved: false }, { approved: { $exists: false } }] };
     const total = await Posts.countDocuments(filter);
     const posts = await Posts.find(filter)
+      .select('title slug desc img cat views comments status approved approvedBy approvedAt createdAt updatedAt user')
       .populate({ path: 'user', select: 'name email image' })
+      .populate({ path: 'approvedBy', select: 'name email' })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -200,6 +244,103 @@ router.post('/podcasts', generalAdminAuth, accessLog(), async (req, res) => {
   } catch (err) {
     console.error('POST /admin/podcasts error', err);
     return res.status(500).json({ success: false, message: 'Unable to create podcast' });
+  }
+});
+
+// GET /api/admin/podcasts - list podcasts (admin)
+router.get('/podcasts', adminAuth, accessLog(), async (req, res) => {
+  try {
+    return adminGetPodcasts(req, res);
+  } catch (err) {
+    console.error('GET /admin/podcasts error', err);
+    return res.status(500).json({ success: false, message: 'Unable to fetch podcasts' });
+  }
+});
+
+// PATCH /api/admin/podcasts/:id - update podcast metadata (general admin)
+router.patch('/podcasts/:id', generalAdminAuth, accessLog(), async (req, res) => {
+  try {
+    return updatePodcast(req, res);
+  } catch (err) {
+    console.error('PATCH /admin/podcasts/:id error', err);
+    return res.status(500).json({ success: false, message: 'Unable to update podcast' });
+  }
+});
+
+// DELETE /api/admin/podcasts/:id - delete podcast (general admin)
+router.delete('/podcasts/:id', generalAdminAuth, accessLog(), async (req, res) => {
+  try {
+    return deletePodcast(req, res);
+  } catch (err) {
+    console.error('DELETE /admin/podcasts/:id error', err);
+    return res.status(500).json({ success: false, message: 'Unable to delete podcast' });
+  }
+});
+
+// Shows (podcast series) CRUD
+router.post('/shows', generalAdminAuth, accessLog(), async (req, res) => {
+  try {
+    return createShow(req, res);
+  } catch (err) {
+    console.error('POST /admin/shows error', err);
+    return res.status(500).json({ success: false, message: 'Unable to create show' });
+  }
+});
+
+router.get('/shows', adminAuth, accessLog(), async (req, res) => {
+  try {
+    return adminGetShows(req, res);
+  } catch (err) {
+    console.error('GET /admin/shows error', err);
+    return res.status(500).json({ success: false, message: 'Unable to fetch shows' });
+  }
+});
+
+router.patch('/shows/:id', generalAdminAuth, accessLog(), async (req, res) => {
+  try {
+    return updateShow(req, res);
+  } catch (err) {
+    console.error('PATCH /admin/shows/:id error', err);
+    return res.status(500).json({ success: false, message: 'Unable to update show' });
+  }
+});
+
+router.delete('/shows/:id', generalAdminAuth, accessLog(), async (req, res) => {
+  try {
+    return deleteShow(req, res);
+  } catch (err) {
+    console.error('DELETE /admin/shows/:id error', err);
+    return res.status(500).json({ success: false, message: 'Unable to delete show' });
+  }
+});
+
+// Episodes CRUD
+router.post('/shows/:id/episodes', generalAdminAuth, accessLog(), async (req, res) => {
+  try {
+    // create episode under show id
+    req.params.showId = req.params.id;
+    return createEpisode(req, res);
+  } catch (err) {
+    console.error('POST /admin/shows/:id/episodes error', err);
+    return res.status(500).json({ success: false, message: 'Unable to create episode' });
+  }
+});
+
+router.patch('/episodes/:id', generalAdminAuth, accessLog(), async (req, res) => {
+  try {
+    return updateEpisode(req, res);
+  } catch (err) {
+    console.error('PATCH /admin/episodes/:id error', err);
+    return res.status(500).json({ success: false, message: 'Unable to update episode' });
+  }
+});
+
+router.delete('/episodes/:id', generalAdminAuth, accessLog(), async (req, res) => {
+  try {
+    return deleteEpisode(req, res);
+  } catch (err) {
+    console.error('DELETE /admin/episodes/:id error', err);
+    return res.status(500).json({ success: false, message: 'Unable to delete episode' });
   }
 });
 

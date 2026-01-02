@@ -72,8 +72,8 @@ const PopularPost = ({ posts = [] }) => {
     return <div className="w-full flex flex-col gap-0">
     <div className="w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-t-2xl p-6 border border-b-0 border-slate-200 dark:border-slate-700">
       <p className="text-xl font-bold text-slate-900 dark:text-slate-300 flex items-center gap-2">
-        <span className="text-orange-600">⭐</span>
-        Popular Posts
+        <span className="text-orange-600"></span>
+        Trending Posts
       </p>
     </div>
 

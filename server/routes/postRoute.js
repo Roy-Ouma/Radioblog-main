@@ -1,5 +1,6 @@
 import express from 'express';
 import { userAuth } from '../middleware/authMiddleware.js';
+import { adminAuth } from '../middleware/adminAuth.js';
 import {
   createPost,
   getFollowers,
@@ -27,7 +28,7 @@ const router = express.Router();// Controller functions (to be implemented)
 
 router.post("/admin-analytics", userAuth, stats);
 router.post("/admin-followers", userAuth, getFollowers);
-router.post("/admin-content", userAuth, getPostContent);
+router.post("/admin-content", adminAuth, getPostContent);
 router.post("/create-post", userAuth, createPostLimiter, createPost);
 
 //LIKE & COMMENT ON POST

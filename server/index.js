@@ -37,6 +37,8 @@ const defaultOrigins = [
   "http://127.0.0.1:3000",
   "http://localhost:3001",
   "http://127.0.0.1:3001",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
   // Common Render deployments used by this project — include your deployed origins here
   "https://radioblog-mai.onrender.com",
   "https://admin-9m1f.onrender.com",
@@ -51,27 +53,50 @@ const allowedOrigins = Array.from(
 
 const corsOptions = {
   origin: (origin, callback) => {
+    console.log(`[CORS] Processing request from origin: ${origin || 'NO_ORIGIN (likely same-origin or mobile)'}`);
+    
+    // Always allow localhost for development
+    if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      console.log(`[CORS] ✓ Allowed (localhost/127.0.0.1)`);
+      return callback(null, true);
+    }
+
     // Development convenience: allow any origin when not in production.
-    // This avoids CORS friction when running proxied apps locally.
-    if (process.env.NODE_ENV !== "production") {
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
+      console.log(`[CORS] ✓ Allowed (development mode)`);
       return callback(null, true);
     }
 
     // Production / strict mode: normalize origin and check whitelist.
     const normalized = origin ? origin.replace(/\/$/, "") : origin;
-    if (!normalized || allowedOrigins.includes(normalized)) {
+    
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!normalized) {
+      console.log(`[CORS] ✓ Allowed (no origin)`);
       return callback(null, true);
     }
+    
+    if (allowedOrigins.includes(normalized)) {
+      console.log(`[CORS] ✓ Allowed (in whitelist)`);
+      return callback(null, true);
+    }
+    
+    console.warn(`[CORS] ✗ BLOCKED - Origin: ${origin} (normalized: ${normalized})\n[CORS] Allowed origins: ${allowedOrigins.join(", ")}`);
     return callback(new Error(`Origin ${origin} is not allowed by CORS policy.`));
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
   allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
   exposedHeaders: ["Authorization"],
+  maxAge: 86400,
 };
 
 app.use(helmet());
 app.use(cors(corsOptions));
+
+// Explicit preflight handler for OPTIONS requests
+app.options('*', cors(corsOptions));
+
 app.use(globalLimiter);
 // Sentry request handler (must be before routes)
 if (process.env.SENTRY_DSN) {

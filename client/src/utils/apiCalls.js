@@ -388,6 +388,74 @@ export const fetchPodcastById = async (id) => {
   }
 };
 
+// Shows API (Podcast shows / series)
+export const fetchShows = async (params = {}) => {
+  try {
+    const { data } = await api.get('/podcasts', { params });
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Fetching shows failed:', message);
+    return { success: false, message };
+  }
+};
+
+export const fetchShowById = async (id) => {
+  try {
+    const { data } = await api.get(`/podcasts/${id}`);
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Fetching show failed:', message);
+    return { success: false, message };
+  }
+};
+
+export const fetchEpisodesByShow = async (showId, params = {}) => {
+  try {
+    const { data } = await api.get(`/podcasts/${showId}/episodes`, { params });
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Fetching episodes failed:', message);
+    return { success: false, message };
+  }
+};
+
+export const fetchEpisodeById = async (id) => {
+  try {
+    const { data } = await api.get(`/podcasts/episodes/${id}`);
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Fetching episode failed:', message);
+    return { success: false, message };
+  }
+};
+
+export const fetchEpisodeComments = async (episodeId) => {
+  try {
+    const { data } = await api.get(`/episodes/${episodeId}/comments`);
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Fetching episode comments failed:', message);
+    return { success: false, message };
+  }
+};
+
+export const postEpisodeComment = async (episodeId, payload, token) => {
+  try {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
+    const { data } = await api.post(`/episodes/${episodeId}/comments`, payload, config);
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Posting episode comment failed:', message);
+    return { success: false, message };
+  }
+};
+
 export const adminCreatePodcast = async (payload, token) => {
   try {
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;

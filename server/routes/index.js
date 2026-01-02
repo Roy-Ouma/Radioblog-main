@@ -5,6 +5,7 @@ import postRoute from "./postRoute.js";
 import adminRoute from "./adminRoute.js";
 import categoryRoute from "./categoryRoute.js";
 import podcastRoute from "./podcastRoute.js";
+import episodeRoute from "./episodeRoute.js";
 import { redirectShare } from '../controllers/shareController.js';
 
 const router = express.Router();
@@ -17,6 +18,7 @@ router.get('/r/:id', redirectShare);
 router.use("/admin", adminRoute);
 router.use("/categories", categoryRoute);
 router.use('/podcasts', podcastRoute);
+router.use('/episodes', episodeRoute);
 
 export default router;
 
