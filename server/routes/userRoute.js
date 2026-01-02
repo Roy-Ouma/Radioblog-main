@@ -9,6 +9,7 @@ import {
 	resendOTP,
 	OTPVerification,
 	resetPassword,
+	deleteAccount,
 } from "../controllers/userController.js";
 import userAuth from "../middleware/authMiddleware.js";
 import adminAuth from "../middleware/adminAuth.js";
@@ -42,6 +43,9 @@ router.patch("/update", userAuth, updateUser);
 
 // Request password reset for current authenticated user
 router.post('/reset-password', userAuth, resetPassword);
+
+// Delete current authenticated user's account
+router.delete('/delete-account', userAuth, deleteAccount);
 
 // Admin: update any user's profile
 router.patch("/update/:id", adminAuth, updateUser);

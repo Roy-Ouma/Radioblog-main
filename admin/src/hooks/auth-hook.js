@@ -2,64 +2,14 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { API_URI } from "../utils";
 
-export const useSignUp = (toast, toggle) => {
-  return useMutation({
-    mutationFn: async (formData) => {
-      toggle();
-      // Server route is /auth/signup
-      const { data } = await axios.post(`${API_URI}/auth/signup`, formData);
-
-      return data;
-    },
-    onError: (error, data) => {
-      toggle();
-      toast.error(error?.response?.data?.message ?? error.message);
-    },
-    onSuccess: (data) => {
-      toggle();
-      console.log(data);
-      // Persist auth response so signup behaves like OAuth (user is authenticated)
-      if (data?.token) {
-        localStorage.setItem("user", JSON.stringify(data));
-      }
-
-      toast.success(data?.message || "Account created");
-
-      // If OTP verification is required, the server returns a pending status.
-      // We still store the auth token so the user is considered signed-in on the client.
-      // Redirect to the app root (behaves like Google OAuth). If you prefer
-      // to force OTP verification first, switch to the otp-verification flow below.
-      setTimeout(() => {
-        window.location.replace("/");
-      }, 800);
-    },
-  });
-};
-
-export const useSignin = (toast, toggle) => {
-  return useMutation({
-    mutationFn: async (formData) => {
-      toggle();
-      const { data } = await axios.post(`${API_URI}/auth/login`, formData);
-
-      localStorage.setItem("user", JSON.stringify(data));
-
-      return data;
-    },
-    onError: (error) => {
-      toggle();
-      toast.error(error?.response?.data?.message ?? error.message);
-    },
-    onSuccess: (data) => {
-      toggle();
-      toast.success(data?.message);
-
-      setTimeout(() => {
-        window.location.replace("/");
-      }, 1000);
-    },
-  });
-};
+/**
+ * Credentials-based authentication has been removed.
+ * All users now authenticate via Google OAuth only.
+ * 
+ * The forms (LoginForm, SignUpForm) now show only Google sign-in buttons.
+ * The /auth/google and /auth/google-signup endpoints handle all authentication.
+ * Role assignment (writer vs user) is handled server-side based on app context.
+ */
 
 export const useResend = (toast, toggle) => {
   const mutation = useMutation({

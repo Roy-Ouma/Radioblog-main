@@ -79,3 +79,38 @@ export const updateURL = ({ page, navigate, location }) => {
 
   return newURL;
 };
+
+/**
+ * Get the author's display name with fallback to Google name
+ * @param {Object} user - User object from store
+ * @returns {string} Author display name
+ */
+export function getAuthorName(user) {
+  if (!user) return "Unknown Author";
+  // Use custom author_name if set, otherwise fall back to Google name
+  return user.author_name || user.name || "Unknown Author";
+}
+
+/**
+ * Get the author's avatar URL with fallback to Google avatar
+ * @param {Object} user - User object from store
+ * @returns {string} Author avatar URL
+ */
+export function getAuthorAvatar(user) {
+  if (!user) return "";
+  // Use custom author_avatar_url if set, otherwise fall back to Google image
+  return user.author_avatar_url || user.image || "";
+}
+
+/**
+ * Get author profile data (name and avatar) with proper fallbacks
+ * @param {Object} user - User object from store
+ * @returns {Object} { name, avatar }
+ */
+export function getAuthorProfile(user) {
+  return {
+    name: getAuthorName(user),
+    avatar: getAuthorAvatar(user),
+  };
+}
+

@@ -1,9 +1,6 @@
 import axios from "axios";
 import User from "../models/UserModel.js";
-import { hashString, compareString } from "../utils/index.js";
-import PasswordReset from "../models/PasswordReset.js";
 import { createJWT } from "../utils/jwt.js";
-import { sendVerificationEmail } from "../utils/sendEmail.js";
 
 const httpError = (status, message) => {
   const err = new Error(message);
@@ -23,101 +20,6 @@ const buildAuthResponse = (res, userDoc, message, status = 200) => {
   });
 };
 
-const formatFullName = (first, last) =>
-  `${(first || "").trim()} ${(last || "").trim()}`.replace(/\s+/g, " ").trim();
-
-export const registerUser = async (req, res, next) => {
-  try {
-    const {
-      firstname,
-      lastname,
-      firstName,
-      lastName,
-      email,
-      password,
-      accountType = "User",
-      image = "",
-    } = req.body;
-
-    const resolvedFirstName = firstname || firstName;
-    const resolvedLastName = lastname || lastName;
-
-    if (!resolvedFirstName || !resolvedLastName || !email || !password) {
-      return next(httpError(400, "First name, last name, email, and password are required."));
-    }
-
-    if (password.length < 8) {
-      return next(httpError(400, "Password must be at least 8 characters long."));
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return next(httpError(409, "Email is already registered."));
-    }
-
-    const hashedPassword = await hashString(password);
-
-    const user = await User.create({
-      name: formatFullName(resolvedFirstName, resolvedLastName),
-      email,
-      password: hashedPassword,
-      accountType: accountType === "Writer" ? "Writer" : "User",
-      provider: "credentials",
-      image,
-      // Credentials signups should not be auto-verified. Only OAuth (e.g. Google)
-      // or explicit email verification flows should mark emailVerified = true.
-      emailVerified: false,
-    });
-
-    // If the account requires email verification (writers/admins), send a verification email
-    const token = createJWT(user._id);
-    if (!user.emailVerified) {
-      // sendVerificationEmail will return the appropriate response to the client
-      return sendVerificationEmail(user, req, res, token);
-    }
-
-    return buildAuthResponse(res, user, "Account created successfully.", 201);
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const loginUser = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return next(httpError(400, "Email and password are required."));
-    }
-
-    const user = await User.findOne({ email }).select("+password");
-    if (!user) {
-      return next(httpError(401, "Invalid credentials."));
-    }
-
-    if (user.provider !== "credentials") {
-      return next(httpError(400, "Please continue with Google for this account."));
-    }
-
-    const isMatch = await compareString(password, user.password || "");
-    if (!isMatch) {
-      return next(httpError(401, "Invalid credentials."));
-    }
-
-    if (user.accountType === "Writer" && !user.emailVerified) {
-      return next(httpError(403, "Please verify your email before signing in."));
-    }
-
-    user.lastLoginAt = new Date();
-    await user.save({ validateBeforeSave: false });
-    user.password = undefined;
-
-    return buildAuthResponse(res, user, "Signed in successfully.");
-  } catch (error) {
-    return next(error);
-  }
-};
-
 const fetchGoogleProfile = async (accessToken) => {
   const { data } = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -125,6 +27,17 @@ const fetchGoogleProfile = async (accessToken) => {
   return data;
 };
 
+/**
+ * Google OAuth authentication endpoint
+ * Supports signup and login for both admin and client apps
+ * 
+ * Role assignment based on request headers or context:
+ * - Admin app (from admin frontend): assigns "writer" role
+ * - Client app (from client frontend): assigns "user" role
+ * 
+ * If user exists, reuses the record and updates profile
+ * If user is new, creates a new record with assigned role
+ */
 export const googleAuth = async (req, res, next) => {
   try {
     const { access_token: accessToken } = req.body;
@@ -139,17 +52,25 @@ export const googleAuth = async (req, res, next) => {
       return next(httpError(400, "Unable to verify Google account."));
     }
 
+    // Determine which app the request is coming from (default: client = "user")
+    // You can pass ?app=admin in the request or set a header
+    const app = req.query.app || req.headers["x-app"] || "client";
+    const defaultRole = app === "admin" ? "writer" : "user";
+
     let user = await User.findOne({ email });
+    
     if (!user) {
+      // Create new user with role based on signup context
       user = await User.create({
         name: googleProfile.name || email.split("@")[0],
         email,
         image: googleProfile.picture || "",
         provider: "google",
         emailVerified: !!googleProfile.email_verified,
-        accountType: "User",
+        accountType: defaultRole,
       });
     } else {
+      // Update existing user to ensure Google provider is set and profile is current
       user.provider = "google";
       user.emailVerified = user.emailVerified || !!googleProfile.email_verified;
       if (!user.image && googleProfile.picture) {
@@ -192,38 +113,7 @@ export const getCurrentUser = async (req, res, next) => {
   }
 };
 
-// POST /api/auth/reset-password-complete
-export const resetPasswordComplete = async (req, res, next) => {
-  try {
-    const { id, token, newPassword } = req.body;
-    if (!id || !token || !newPassword) return next(httpError(400, 'Missing id, token or newPassword'));
-    if (newPassword.length < 8) return next(httpError(400, 'Password must be at least 8 characters'));
-
-    const resetRec = await PasswordReset.findOne({ userId: id, used: false }).sort({ createdAt: -1 });
-    if (!resetRec) return next(httpError(400, 'Reset token not found or already used'));
-    if (resetRec.expiresAt < Date.now()) return next(httpError(410, 'Reset token expired'));
-
-    const match = await compareString(String(token), resetRec.token);
-    if (!match) return next(httpError(400, 'Invalid token'));
-
-    const user = await User.findById(id).select('+password');
-    if (!user) return next(httpError(404, 'User not found'));
-
-    user.password = await hashString(newPassword);
-    await user.save();
-
-    resetRec.used = true;
-    await resetRec.save();
-
-    return res.json({ message: 'Password updated successfully' });
-  } catch (err) {
-    return next(err);
-  }
-};
-
 export default {
-  registerUser,
-  loginUser,
   googleAuth,
   getCurrentUser,
 };

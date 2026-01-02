@@ -141,8 +141,8 @@ export const unfollowWriter = async (req, res, next) => {
 
 export const updateUser = async (req, res, next) => {
   try {
-    // Accept either full name or first/last name pieces
-    const { firstName, lastName, image, name } = req.body;
+    // Accept either full name or first/last name pieces, plus author customization fields
+    const { firstName, lastName, image, name, author_name, author_avatar_url } = req.body;
 
     // Determine which user to update: param id (admin), body.userId, or authenticated user
     const userId = req.params?.id || req.body.user || req.body.userId || req.user?.userId;
@@ -153,8 +153,24 @@ export const updateUser = async (req, res, next) => {
     if (name) updateUser.name = String(name).trim();
     else if (firstName || lastName) updateUser.name = `${(firstName || '').trim()} ${(lastName || '').trim()}`.trim();
     if (image !== undefined) updateUser.image = image;
+    
+    // Profile customization fields (author name and avatar)
+    if (author_name !== undefined) {
+      if (author_name === null || author_name === '') {
+        updateUser.author_name = null; // Allow clearing author_name to revert to Google name
+      } else {
+        updateUser.author_name = String(author_name).trim();
+      }
+    }
+    if (author_avatar_url !== undefined) {
+      if (author_avatar_url === null || author_avatar_url === '') {
+        updateUser.author_avatar_url = null; // Allow clearing to revert to Google avatar
+      } else {
+        updateUser.author_avatar_url = String(author_avatar_url).trim();
+      }
+    }
 
-    if (!updateUser.name && updateUser.image === undefined) {
+    if (!updateUser.name && updateUser.image === undefined && author_name === undefined && author_avatar_url === undefined) {
       return res.status(400).json({ success: false, message: 'No update fields provided' });
     }
 
@@ -326,6 +342,50 @@ export const adminResetPassword = async (req, res, next) => {
   } catch (error) {
     console.error('adminResetPassword error', error);
     return res.status(500).json({ success: false, message: 'Something went wrong' });
+  }
+};
+
+// DELETE /api/users/delete-account - Delete current authenticated user's account
+export const deleteAccount = async (req, res, next) => {
+  try {
+    const userId = req.user?.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'User ID is required' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Delete all user-related data
+    await Promise.all([
+      // Delete user document
+      User.findByIdAndDelete(userId),
+      // Delete all posts by user
+      Posts.deleteMany({ userId }),
+      // Delete all views by user
+      Views.deleteMany({ userId }),
+      // Delete all followers
+      Follower.deleteMany({ $or: [{ userId }, { followerId: userId }] }),
+      // Delete all verification records
+      Verification.deleteMany({ userId }),
+      // Delete all password reset records
+      PasswordReset.deleteMany({ userId }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Account deleted successfully. All associated data has been removed.',
+    });
+  } catch (error) {
+    console.error('deleteAccount error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete account' });
   }
 };
 

@@ -28,6 +28,9 @@ const userSchema = new Schema(
     password: {
       type: String,
       select: false,
+      default: null,
+      // Deprecated: password field kept for backward compatibility.
+      // All authentication now uses Google OAuth only.
     },
     image: {
       type: String,
@@ -40,8 +43,8 @@ const userSchema = new Schema(
     },
     provider: {
       type: String,
-      enum: ["credentials", "google"],
-      default: "credentials",
+      enum: ["google"],
+      default: "google",
     },
     emailVerified: {
       type: Boolean,
@@ -65,6 +68,17 @@ const userSchema = new Schema(
       type: Boolean,
       default: true,
     },
+    // Profile customization for writers (optional overrides for Google defaults)
+    author_name: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 120,
+    },
+    author_avatar_url: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -77,40 +91,15 @@ userSchema.methods.toSafeObject = function toSafeObject() {
   return doc;
 };
 
-// Enforce that credential-based accounts are not marked verified accidentally.
+// Enforce that all users use Google OAuth only
 userSchema.pre('save', function (next) {
   try {
-    if (this.provider === 'credentials') {
-      this.emailVerified = false;
+    if (this.provider !== 'google') {
+      this.provider = 'google';
     }
-  } catch (e) {
-    // ignore
-  }
-  next();
-});
-
-// When using findOneAndUpdate, ensure updates do not set emailVerified=true for credentials
-userSchema.pre('findOneAndUpdate', function (next) {
-  try {
-    const update = this.getUpdate() || {};
-    // If the update sets emailVerified to true, and provider is credentials (either in query or update), block it
-    const set = update.$set || update;
-    const providerInUpdate = (set.provider || (update.$set && update.$set.provider)) || null;
-    const emailVerifiedInUpdate = set.emailVerified === true || (update.$set && update.$set.emailVerified === true);
-    // if provider is explicitly set to credentials, force emailVerified false
-    if (providerInUpdate === 'credentials') {
-      if (update.$set) update.$set.emailVerified = false;
-      else update.emailVerified = false;
-      this.setUpdate(update);
-    } else if (emailVerifiedInUpdate) {
-      // provider might be in the query; check it
-      const q = this.getQuery() || {};
-      const providerInQuery = q.provider || null;
-      if (providerInQuery === 'credentials') {
-        if (update.$set) update.$set.emailVerified = false;
-        else update.emailVerified = false;
-        this.setUpdate(update);
-      }
+    // Google OAuth users are always verified
+    if (this.provider === 'google') {
+      this.emailVerified = true;
     }
   } catch (e) {
     // ignore

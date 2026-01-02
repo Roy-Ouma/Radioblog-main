@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Button, Textarea, TextInput, Group, Stack, Tabs, ScrollArea, Badge, Text, Grid, Image, Paper } from "@mantine/core";
+import { Modal, Button, Textarea, TextInput, Group, Stack, Tabs, ScrollArea, Badge, Text, Grid, Image, Paper, Loader } from "@mantine/core";
 import { toast } from "sonner";
 import axios from "axios";
 import { API_URI } from "../utils";
@@ -13,6 +13,8 @@ const EditPostModal = ({ opened, onClose, post, token, onPostUpdated, isApproved
     cat: post.cat || "",
   } : {});
   const [isSaving, setIsSaving] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   React.useEffect(() => {
     if (post) {
@@ -25,7 +27,15 @@ const EditPostModal = ({ opened, onClose, post, token, onPostUpdated, isApproved
         img: imgUrl,
         cat: post.cat || "",
       });
-      console.log("Modal loaded with post:", { title: post.title, hasImg: !!imgUrl, imgUrl, hasDesc: !!description });
+      setImageLoaded(false);
+      setImageError(false);
+      console.log("Modal loaded with post:", { 
+        title: post.title, 
+        hasImg: !!imgUrl, 
+        imgUrl, 
+        hasDesc: !!description,
+        descLength: description?.length 
+      });
       setIsEditing(false);
     }
   }, [post]);
@@ -103,14 +113,36 @@ const EditPostModal = ({ opened, onClose, post, token, onPostUpdated, isApproved
               {/* Cover Image */}
               {formData.img ? (
                 <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-                  <Image
-                    src={formData.img}
-                    alt={formData.title || "Post"}
-                    height={300}
-                    fit="cover"
-                    radius="md"
-                    onError={(e) => console.log("Image load error:", e)}
-                  />
+                  {!imageLoaded && !imageError && (
+                    <div className="h-64 flex items-center justify-center bg-slate-100 dark:bg-slate-700">
+                      <Loader size="sm" />
+                    </div>
+                  )}
+                  {!imageError ? (
+                    <Image
+                      src={formData.img}
+                      alt={formData.title || "Post"}
+                      height={imageLoaded ? 300 : 0}
+                      fit="cover"
+                      radius="md"
+                      onLoad={() => setImageLoaded(true)}
+                      onError={(e) => {
+                        console.log("Image load error:", e);
+                        setImageError(true);
+                        toast.error("Unable to load image from Supabase. Please verify the image URL exists in your storage.");
+                      }}
+                    />
+                  ) : null}
+                  {imageError && (
+                    <div className="h-64 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-700">
+                      <Text className="text-red-600 dark:text-red-400 text-center mb-2">
+                        Failed to load image
+                      </Text>
+                      <Text className="text-xs text-slate-500 dark:text-slate-400 text-center px-4 max-w-sm break-all">
+                        {formData.img}
+                      </Text>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700 h-64 flex items-center justify-center">
@@ -195,15 +227,22 @@ const EditPostModal = ({ opened, onClose, post, token, onPostUpdated, isApproved
                 <Text className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
                   Content
                 </Text>
-                {formData.desc ? (
+                {formData.desc && formData.desc.trim() ? (
                   <div className="prose dark:prose-invert max-w-none">
                     <div className="text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap min-h-32 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                       {formData.desc}
                     </div>
                   </div>
                 ) : (
-                  <div className="min-h-32 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400">
-                    No content available
+                  <div className="min-h-32 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 flex items-center justify-center">
+                    <div className="text-center">
+                      <Text className="text-yellow-700 dark:text-yellow-400 font-semibold mb-1">
+                        ⚠️ No content available
+                      </Text>
+                      <Text className="text-xs text-yellow-600 dark:text-yellow-500">
+                        The post description appears to be empty. Please edit the post to add content.
+                      </Text>
+                    </div>
                   </div>
                 )}
               </div>

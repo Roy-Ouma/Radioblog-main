@@ -19,6 +19,7 @@ import CreatePodcast from "./pages/CreatePodcast";
 import CreateShow from "./pages/CreateShow";
 import PodcastsList from "./pages/PodcastsList";
 import ShowEpisodes from "./pages/ShowEpisodes";
+import Profile from "./pages/Profile";
 
 function Layout() {
   const { user } = useStore((state) => state);
@@ -26,14 +27,14 @@ function Layout() {
   const location = useLocation();
 
   return user?.token ? (
-    <div className='w-full h-screen'>
+    <div className='w-full h-screen bg-slate-50 dark:bg-slate-950'>
       <Navbar />
-      <div className='w-full h-full flex border-t pt-16 '>
-        <div className='hidden lg:flex '>
+      <div className='w-full h-full flex border-t border-slate-200 dark:border-slate-800 pt-16'>
+        <div className='hidden lg:flex sticky top-16 h-[calc(100vh-64px)] overflow-y-auto'>
           <Sidebar />
         </div>
 
-        <div className='w-full flex-1 px-8 py-4 overflow-y-auto'>
+        <div className='w-full flex-1 px-6 md:px-8 py-6 overflow-y-auto bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900'>
           <Outlet />
         </div>
       </div>
@@ -50,6 +51,7 @@ function App() {
         <Route element={<Layout />}>
           <Route index path='/' element={<Navigate to='/dashboard' />} />
           <Route path='/dashboard' element={<Dashboard />} />
+          <Route path='/profile' element={<Profile />} />
           <Route path='/analytics' element={<Analytics />} />
           <Route path='/categories' element={<Categories />} />
           <Route path='/followers' element={<Followers />} />

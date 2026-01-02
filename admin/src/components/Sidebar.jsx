@@ -28,25 +28,30 @@ const mockdata = [
     { icon: IconCalendarStats, label: "Share Logs", to: "share-logs" },
     { icon: IconCalendarStats, label: "Banners", to: "banners" },
   { icon: IconUser, label: "Followers", to: "followers" },
-  { icon: IconCalendarStats, label: "Podcasts", to: "podcasts" },
   { icon: BsPencilSquare, label: "Create Post", to: "write" },
   { icon: IconSettings, label: "Settings" },
 ];
 
 const NavbarLink = ({ icon: Icon, label, active, onClick }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const theme = colorScheme === "dark";
+
   return (
     <Tooltip label={label} position='right' transitionProps={{ duration: 0 }}>
       <UnstyledButton
         onClick={onClick}
         className={clsx(
-          "flex items-center gap-2 px-4 py-1.5 rounded-full",
-          active ? "bg-black text-white" : ""
+          "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 font-medium text-sm",
+          active
+            ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+            : theme
+              ? "text-slate-300 hover:bg-slate-700/50 hover:text-slate-100"
+              : "text-slate-700 hover:bg-slate-200/50 hover:text-slate-900"
         )}
         data-active={active || undefined}
       >
         <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
-
-        {label}
+        <span>{label}</span>
       </UnstyledButton>
     </Tooltip>
   );
@@ -87,29 +92,67 @@ const Sidebar = ({ close = () => {} }) => {
       />
     ) : null;
 
-  return (
-    <nav className='h-full flex flex-col gap-5 border-t border-slate-700 px-6 2xl:px-14'>
-      <p className='py-2'>MENU</p>
+  const theme = colorScheme === "dark";
 
-      <Stack justify='center' gap={10}>
+  return (
+    <nav className={clsx(
+      'h-full flex flex-col gap-6 rounded-xl p-5 m-4 border transition-all',
+      theme
+        ? 'bg-slate-800/40 border-slate-700/50'
+        : 'bg-slate-50 border-slate-200'
+    )}>
+      <div className='space-y-1'>
+        <p className={clsx(
+          'text-xs font-bold tracking-widest uppercase',
+          theme ? 'text-slate-500' : 'text-slate-500'
+        )}>
+          Navigation
+        </p>
+      </div>
+
+      <Stack justify='flex-start' gap={8}>
         {links}
       </Stack>
 
-      <ActionIcon
-        onClick={() =>
-          setColorScheme(colorScheme === "light" ? "dark" : "light")
-        }
-        variant='default'
-        size='xl'
-        aria-label='Toggle color scheme'
-        className='w-full rounded-full mt-10'
-      >
-        {colorScheme === "dark" ? (
-          <IconSun stroke={0.5} />
-        ) : (
-          <IconMoon stroke={0.5} />
-        )}
-      </ActionIcon>
+      {adminLink && (
+        <>
+          <div className={clsx(
+            'h-px',
+            theme ? 'bg-slate-700/50' : 'bg-slate-200'
+          )} />
+          <Stack justify='flex-start' gap={8}>
+            {adminLink}
+          </Stack>
+        </>
+      )}
+
+      <div className='flex-1' />
+
+      <div className={clsx(
+        'pt-4 border-t',
+        theme ? 'border-slate-700/50' : 'border-slate-200'
+      )}>
+        <ActionIcon
+          onClick={() =>
+            setColorScheme(colorScheme === "light" ? "dark" : "light")
+          }
+          variant='subtle'
+          size='lg'
+          aria-label='Toggle color scheme'
+          className={clsx(
+            'w-full rounded-lg transition-all',
+            theme
+              ? 'hover:bg-slate-700/50'
+              : 'hover:bg-slate-100/50'
+          )}
+        >
+          {colorScheme === "dark" ? (
+            <IconSun stroke={1.5} size={20} />
+          ) : (
+            <IconMoon stroke={1.5} size={20} />
+          )}
+        </ActionIcon>
+      </div>
     </nav>
   );
 };
