@@ -77,9 +77,23 @@ export function PasswordStrength({ value, setValue, setStrength, isSignin }) {
       <PasswordInput
         value={value}
         onChange={setValue}
-        placeholder='Your password'
+        placeholder='Min 6 chars, uppercase, number & symbol'
         label='Password'
         required
+        styles={{
+          input: {
+            borderRadius: '0.5rem',
+            height: '2.25rem',
+            fontSize: '0.875rem',
+          },
+          label: {
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            marginBottom: '0.25rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.025em',
+          },
+        }}
       />
 
       {!isSignin && (

@@ -81,44 +81,89 @@ const LoginForm = ({ toast, isSignin, setIsSignin, toggle, setFormClose }) => {
   return (
     <form
       onSubmit={form.onSubmit(handleSubmit)}
-      className='flex flex-col gap-4'
+      className={clsx(
+        'w-full rounded-2xl p-6 md:p-8 shadow-2xl',
+        'border border-opacity-20',
+        theme
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-blue-500'
+          : 'bg-gradient-to-br from-white via-slate-50 to-white border-blue-200'
+      )}
     >
+      <div className='mb-4'>
+        <h2 className={clsx(
+          'text-xl font-bold mb-1',
+          theme ? 'text-white' : 'text-gray-900'
+        )}>
+          Welcome Back
+        </h2>
+        <p className={clsx(
+          'text-xs',
+          theme ? 'text-gray-400' : 'text-gray-600'
+        )}>
+          Sign in to your admin account
+        </p>
+      </div>
+
       <TextInput
         withAsterisk
-        label='Email Address'
-        placeholder='your@email.com'
+        label='Email'
+        placeholder='admin@example.com'
+        className='mb-2'
+        styles={{
+          input: {
+            borderRadius: '0.5rem',
+            height: '2.25rem',
+            fontSize: '0.875rem',
+            backgroundColor: theme ? '#1f2937' : '#f8fafc',
+            borderColor: theme ? '#374151' : '#e2e8f0',
+            color: theme ? '#f3f4f6' : '#1f2937',
+            paddingLeft: '0.75rem',
+            paddingRight: '0.75rem',
+          },
+          label: {
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            marginBottom: '0.25rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.025em',
+          },
+        }}
         {...form.getInputProps("email")}
       />
 
-      <PasswordStrength
-        value={passValue}
-        setValue={setPassValue}
-        setStrength={setStrength}
-        isSignin={true}
-      />
+      <div className='mb-4'>
+        <PasswordStrength
+          value={passValue}
+          setValue={setPassValue}
+          setStrength={setStrength}
+          isSignin={true}
+        />
+      </div>
 
-      <Group
-        className={clsx(
-          "w-full flex",
-          isSignin ? "justify-end" : " justify-between"
-        )}
-        mt='md'
-      >
+      <Group className='w-full mb-4' grow>
         <Button
           type='submit'
-          className={clsx(theme ? "bg-blue-600" : "bg-black")}
+          className={clsx(
+            'h-12 font-semibold rounded-lg transition-all duration-200',
+            'bg-gradient-to-r from-blue-600 to-blue-700 hover:shadow-lg hover:shadow-blue-600/50 text-white'
+          )}
         >
-          Submit
+          Sign in
         </Button>
       </Group>
 
-      <Divider label='Or continue with' labelPosition='center' my='sm' />
+      <Divider label='Or continue with' labelPosition='center' my='xs' className={theme ? 'opacity-50' : ''} />
 
-      <Stack>
+      <Stack className='mt-4' gap='xs'>
         <Button
           variant='outline'
           onClick={() => googleLogin()}
-          className='w-full flex items-center justify-center gap-2'
+          className={clsx(
+            'w-full flex items-center justify-center gap-2 h-12 font-medium rounded-lg transition-all duration-200',
+            theme
+              ? 'border-gray-600 hover:bg-gray-700 text-gray-200'
+              : 'border-gray-300 hover:bg-slate-50'
+          )}
         >
           <svg
             xmlns='http://www.w3.org/2000/svg'
@@ -134,10 +179,13 @@ const LoginForm = ({ toast, isSignin, setIsSignin, toggle, setFormClose }) => {
           Sign in with Google
         </Button>
       </Stack>
-      <p className='text-sm'>
-        {isSignin ? "Don't have an account?" : "Already has an account?"}
+      <p className={clsx(
+        'text-sm mt-4 text-center font-medium',
+        theme ? 'text-gray-300' : 'text-gray-700'
+      )}>
+        {isSignin ? "Don't have an account?" : "Already have an account?"}
         <span
-          className='underline text-blue-600 ml-1 cursor-pointer'
+          className='ml-2 text-blue-600 hover:text-blue-700 cursor-pointer font-semibold transition-colors'
           onClick={() => setIsSignin((prev) => !prev)}
         >
           {isSignin ? "Sign up" : "Sign in"}

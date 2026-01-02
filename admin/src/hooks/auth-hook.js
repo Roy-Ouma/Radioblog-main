@@ -18,17 +18,20 @@ export const useSignUp = (toast, toggle) => {
     onSuccess: (data) => {
       toggle();
       console.log(data);
-      toast.success(data?.message);
-      localStorage.setItem(
-        "otp_data",
-        JSON.stringify({
-          otpLevel: true,
-          id: data.user._id,
-        })
-      );
+      // Persist auth response so signup behaves like OAuth (user is authenticated)
+      if (data?.token) {
+        localStorage.setItem("user", JSON.stringify(data));
+      }
+
+      toast.success(data?.message || "Account created");
+
+      // If OTP verification is required, the server returns a pending status.
+      // We still store the auth token so the user is considered signed-in on the client.
+      // Redirect to the app root (behaves like Google OAuth). If you prefer
+      // to force OTP verification first, switch to the otp-verification flow below.
       setTimeout(() => {
-        window.location.replace("/otp-verification");
-      }, 3000);
+        window.location.replace("/");
+      }, 800);
     },
   });
 };

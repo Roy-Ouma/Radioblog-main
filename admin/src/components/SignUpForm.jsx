@@ -148,51 +148,153 @@ const SignUpForm = ({ toast, isSignin, setIsSignin, toggle, setFormClose }) => {
   return (
     <form
       onSubmit={form.onSubmit(handleSubmit)}
-      className='flex flex-col gap-3 p-6 md:p-8 rounded-lg my-6 mx-auto max-w-2xl'
+      className={clsx(
+        'w-full rounded-2xl p-6 md:p-8 shadow-2xl',
+        'border border-opacity-20',
+        theme
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-blue-500'
+          : 'bg-gradient-to-br from-white via-slate-50 to-white border-blue-200'
+      )}
     >
-      <div className='w-full flex gap-2 '>
+      <div className='mb-4'>
+        <h2 className={clsx(
+          'text-xl font-bold mb-1',
+          theme ? 'text-white' : 'text-gray-900'
+        )}>
+          Create Account
+        </h2>
+        <p className={clsx(
+          'text-xs',
+          theme ? 'text-gray-400' : 'text-gray-600'
+        )}>
+          Join our admin community
+        </p>
+      </div>
+
+      <div className='w-full flex gap-3 mb-2'>
         <TextInput
           className='w-full'
           withAsterisk
           label='First Name'
-          placeholder='First Name'
+          placeholder='John'
+          styles={{
+            input: {
+              borderRadius: '0.5rem',
+              height: '2.25rem',
+              fontSize: '0.875rem',
+              backgroundColor: theme ? '#1f2937' : '#f8fafc',
+              borderColor: theme ? '#374151' : '#e2e8f0',
+              color: theme ? '#f3f4f6' : '#1f2937',
+              paddingLeft: '0.75rem',
+              paddingRight: '0.75rem',
+            },
+            label: {
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              marginBottom: '0.25rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.025em',
+            },
+          }}
           {...form.getInputProps("firstName")}
         />
         <TextInput
           className='w-full'
           withAsterisk
           label='Last Name'
-          placeholder='Last Name'
+          placeholder='Doe'
+          styles={{
+            input: {
+              borderRadius: '0.5rem',
+              height: '2.25rem',
+              fontSize: '0.875rem',
+              backgroundColor: theme ? '#1f2937' : '#f8fafc',
+              borderColor: theme ? '#374151' : '#e2e8f0',
+              color: theme ? '#f3f4f6' : '#1f2937',
+              paddingLeft: '0.75rem',
+              paddingRight: '0.75rem',
+            },
+            label: {
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              marginBottom: '0.25rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.025em',
+            },
+          }}
           {...form.getInputProps("lastName")}
         />
       </div>
 
       <TextInput
         withAsterisk
-        label='Email Address'
-        placeholder='your@email.com'
+        label='Email'
+        placeholder='admin@example.com'
+        className='mb-2'
+        styles={{
+          input: {
+            borderRadius: '0.5rem',
+            height: '2.25rem',
+            fontSize: '0.875rem',
+            backgroundColor: theme ? '#1f2937' : '#f8fafc',
+            borderColor: theme ? '#374151' : '#e2e8f0',
+            color: theme ? '#f3f4f6' : '#1f2937',
+            paddingLeft: '0.75rem',
+            paddingRight: '0.75rem',
+          },
+          label: {
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            marginBottom: '0.25rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.025em',
+          },
+        }}
         {...form.getInputProps("email")}
       />
 
       <Select
         label="Account Type"
+        placeholder="Select role"
         data={[{ value: "Writer", label: "Writer" }, { value: "Admin", label: "Admin" }]}
+        className='mb-2'
+        styles={{
+          input: {
+            borderRadius: '0.5rem',
+            height: '2.25rem',
+            fontSize: '0.875rem',
+            backgroundColor: theme ? '#1f2937' : '#f8fafc',
+            borderColor: theme ? '#374151' : '#e2e8f0',
+            color: theme ? '#f3f4f6' : '#1f2937',
+            paddingLeft: '0.75rem',
+            paddingRight: '0.75rem',
+          },
+          label: {
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            marginBottom: '0.25rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.025em',
+          },
+        }}
         {...form.getInputProps("accountType")}
       />
 
-      <PasswordStrength
-        value={passValue}
-        setValue={setPassValue}
-        setStrength={setStrength}
-        isSignin={false}
-      />
+      <div className='mb-4'>
+        <PasswordStrength
+          value={passValue}
+          setValue={setPassValue}
+          setStrength={setStrength}
+          isSignin={false}
+        />
+      </div>
 
-      <Group className={`w-full flex  justify-between`} mt='md'>
-        <div className={`flex flex-col items-center justify-between`}>
+      <Group className={`w-full mb-4 flex flex-col md:flex-row items-center justify-between gap-3`} mt='md'>
+        <div className={`flex flex-col items-center justify-center px-4 py-3 rounded-lg border-2 border-dashed transition-colors ${theme ? 'border-gray-600 hover:border-blue-500' : 'border-gray-300 hover:border-blue-500'}`}>
           <label
             className={clsx(
-              "flex items-center gap-2 text-base cursor-pointer",
-              theme ? "text-gray-400" : "text-slate-700"
+              "flex items-center gap-2 text-sm cursor-pointer font-medium whitespace-nowrap",
+              theme ? "text-gray-200 hover:text-blue-400" : "text-slate-700 hover:text-blue-600"
             )}
             htmlFor='imgUpload'
           >
@@ -203,35 +305,43 @@ const SignUpForm = ({ toast, isSignin, setIsSignin, toggle, setFormClose }) => {
               id='imgUpload'
             />
 
-            <BiImages />
-            <span>{isUploading ? "Uploading..." : "Profile Picture"}</span>
+            <BiImages className='text-lg flex-shrink-0' />
+            <span>{isUploading ? "Uploading..." : "Profile Pic"}</span>
           </label>
 
           </div>
 
         {isUploading && (
-          <div className="flex flex-col items-start w-full ml-4">
-            <Text size="sm">Uploading image: {uploadProgress}%</Text>
-            <Progress value={uploadProgress} size="sm" className="w-48 mt-1" />
+          <div className="flex flex-col items-start w-full md:w-auto">
+            <Text size="xs" className={theme ? 'text-gray-400' : 'text-gray-700'}>Uploading: {uploadProgress}%</Text>
+            <Progress value={uploadProgress} size="xs" className="w-40 mt-1" />
           </div>
         )}
 
         <Button
           type='submit'
-          className={clsx(theme ? "bg-blue-600" : "bg-black")}
+          className={clsx(
+            'h-12 font-semibold rounded-lg transition-all duration-200 flex-shrink-0',
+            'bg-gradient-to-r from-blue-600 to-blue-700 hover:shadow-lg hover:shadow-blue-600/50 text-white'
+          )}
           disabled={isUploading}
         >
-          {isUploading ? "Uploading..." : "Submit"}
+          {isUploading ? "Uploading..." : "Create"}
         </Button>
       </Group>
 
-      <Divider label='Or continue with' labelPosition='center' my='sm' />
+      <Divider label='Or continue with' labelPosition='center' my='xs' className={theme ? 'opacity-50' : ''} />
 
-      <Stack>
+      <Stack className='mt-4' gap='xs'>
         <Button
           variant='outline'
           onClick={() => googleSignup()}
-          className='w-full flex items-center justify-center gap-2'
+          className={clsx(
+            'w-full flex items-center justify-center gap-2 h-12 font-medium rounded-lg transition-all duration-200',
+            theme
+              ? 'border-gray-600 hover:bg-gray-700 text-gray-200'
+              : 'border-gray-300 hover:bg-slate-50'
+          )}
         >
           <svg
             xmlns='http://www.w3.org/2000/svg'
@@ -247,10 +357,13 @@ const SignUpForm = ({ toast, isSignin, setIsSignin, toggle, setFormClose }) => {
           Continue with Google
         </Button>
       </Stack>
-      <p className='text-sm'>
-        {isSignin ? "Don't have an account?" : "Already has an account?"}
+      <p className={clsx(
+        'text-sm mt-4 text-center font-medium',
+        theme ? 'text-gray-300' : 'text-gray-700'
+      )}>
+        {isSignin ? "Don't have an account?" : "Already have an account?"}
         <span
-          className='underline text-blue-600 ml-1 cursor-pointer'
+          className='ml-2 text-blue-600 hover:text-blue-700 cursor-pointer font-semibold transition-colors'
           onClick={() => setIsSignin((prev) => !prev)}
         >
           {isSignin ? "Sign up" : "Sign in"}
