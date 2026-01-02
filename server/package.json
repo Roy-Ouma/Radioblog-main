@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "set NODE_OPTIONS=--openssl-legacy-provider && nodemon index.js",
-    "start": "set NODE_OPTIONS=--openssl-legacy-provider && node index.js",
+    "dev": "cross-env NODE_OPTIONS=--openssl-legacy-provider nodemon index.js",
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider node index.js",
     "dev:server": "nodemon index.js",
     "migrate:files": "node scripts/migrate-files-to-supabase.js",
     "export:mongo": "node scripts/export-mongo-to-json.js",
