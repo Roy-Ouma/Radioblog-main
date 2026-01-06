@@ -5,6 +5,7 @@ import Button from "../components/Button";
 import Profile from "../assets/profile.png";
 import useStore from "../store";
 import { createComment, deleteComment, fetchComments, likeComment, unlikeComment } from "../utils/apiCalls";
+import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai';
 
 const PostComments = ({ postId }) => {
   const store = useStore();
@@ -54,8 +55,9 @@ const PostComments = ({ postId }) => {
       const payload = replyTo ? { desc, parent: replyTo } : { desc };
       const response = await createComment(postId, payload, token);
       if (response?.success) {
-        // prepend new comment
-        setComments((prev) => [response.data, ...prev]);
+          // Add the new comment to state. If it's a reply (`parent` set), keep it in the flat list
+          // (the UI groups replies under their parent), otherwise show as top-level.
+          setComments((prev) => [response.data, ...prev]);
         setDesc("");
         setReplyTo(null);
         toast.success("Comment added.");
@@ -96,10 +98,19 @@ const PostComments = ({ postId }) => {
       const already = (comment.likes || []).some((l) => String(l) === String(authUser?._id));
       const res = already ? await unlikeComment(comment._id) : await likeComment(comment._id);
       if (res?.success) {
-        setComments((prev) => prev.map((c) => (c._id === comment._id ? { ...c, likes: Array(res.data?.likesCount).fill(null) } : c)));
-        // reload comments to get latest structure
-        const refreshed = await fetchComments(postId);
-        if (refreshed?.success) setComments(refreshed.data || []);
+        // update likes array locally: add or remove current user id
+        setComments((prev) =>
+          prev.map((c) => {
+            if (c._id !== comment._id) return c;
+            const likesArr = Array.isArray(c.likes) ? [...c.likes] : [];
+            if (already) {
+              // remove user id
+              return { ...c, likes: likesArr.filter((id) => String(id) !== String(authUser?._id)) };
+            }
+            // add user id
+            return { ...c, likes: [...likesArr, authUser?._id] };
+          })
+        );
       } else {
         toast.error(res?.message || 'Unable to update like');
       }
@@ -189,9 +200,14 @@ const PostComments = ({ postId }) => {
                       <button
                         type="button"
                         onClick={() => handleLikeToggle(comment)}
-                        className="text-sm text-slate-600 hover:text-slate-800 transition"
+                        className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800 transition"
                       >
-                        Like ({comment?.likes?.length || 0})
+                        { (comment?.likes || []).some((l) => String(l) === String(authUser?._id)) ? (
+                          <AiFillHeart className="text-red-500" />
+                        ) : (
+                          <AiOutlineHeart className="text-slate-600" />
+                        )}
+                        <span className="ml-0">{comment?.likes?.length || 0}</span>
                       </button>
                       {authUser?._id === comment?.user?._id && (
                         <button
@@ -254,9 +270,14 @@ const PostComments = ({ postId }) => {
                             <button
                               type="button"
                               onClick={() => handleLikeToggle(reply)}
-                              className="text-xs text-slate-600 hover:text-slate-800 transition"
+                              className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-800 transition"
                             >
-                              Like ({reply?.likes?.length || 0})
+                              { (reply?.likes || []).some((l) => String(l) === String(authUser?._id)) ? (
+                                <AiFillHeart className="text-red-500" />
+                              ) : (
+                                <AiOutlineHeart className="text-slate-600" />
+                              )}
+                              <span className="ml-0">{reply?.likes?.length || 0}</span>
                             </button>
                             {authUser?._id === reply?.user?._id && (
                               <button
