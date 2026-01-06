@@ -208,31 +208,31 @@ export const getPostContent = async (req, res, next) => {
 
 export const createPost = async (req, res, next) => {
   try {
-    const { title, description, cat, status } = req.body;
+    const { title, desc, content, cat, status } = req.body;
 
     if (!title) {
       return next("Title is required!");
     }
 
-    // --- MAGIC HAPPENS HERE ---
-    // Pass the 'Posts' model so it checks the posts table
+    // Generate a unique slug for the post
     const slug = await createUniqueSlug(title, Posts);
-    // --------------------------
 
-    const newPost = await Posts.create({
+    const userId = req.user?.userId || req.user?.id;
+
+    const post = new Posts({
+      user: userId,
       title,
-      slug, // Save the unique slug
-      description,
+      desc,
+      content,
       cat,
-      user: req.user.userId,
-      status: status ?? false, // Default to draft if not provided
+      slug,
+      img: req.file?.path || req.body?.img,
+      status: status ?? false,
     });
 
-    res.status(201).json({
-      success: true,
-      message: "Post created successfully",
-      data: newPost,
-    });
+    await post.save();
+
+    res.status(201).json({ success: true, data: post });
   } catch (error) {
     console.log(error);
     res.status(404).json({ message: error.message });
