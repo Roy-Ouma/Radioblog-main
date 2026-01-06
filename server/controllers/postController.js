@@ -241,7 +241,7 @@ export const createPost = async (req, res, next) => {
 
 export const commentPost = async (req, res, next) => {
   try {
-    const { desc } = req.body;
+    const { desc, parent } = req.body;
     const { id: postId } = req.params;
     const userId = ensureUser(req, res);
     if (!userId) return;
@@ -263,6 +263,7 @@ export const commentPost = async (req, res, next) => {
       user: userId,
       desc: desc.trim(),
       post: postId,
+      parent: parent || null,
     });
 
     post.comments.push(newComment._id);
@@ -626,4 +627,62 @@ export const getShareLink = async (req, res, next) => {
     return res.status(500).json({ success: false, message: 'Unable to construct share link' });
   }
 
+};
+
+export const likeComment = async (req, res, next) => {
+  try {
+    const userId = ensureUser(req, res);
+    if (!userId) return;
+
+    const { id: commentId } = req.params;
+    if (!commentId) return res.status(400).json({ success: false, message: 'Comment id is required' });
+
+    const updated = await Comments.findByIdAndUpdate(
+      commentId,
+      { $addToSet: { likes: userId } },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ success: false, message: 'Comment not found' });
+
+    const liked = (updated.likes || []).some((l) => String(l) === String(userId));
+
+    res.status(200).json({
+      success: true,
+      message: liked ? 'Comment liked' : 'Like recorded',
+      data: { likesCount: updated.likes?.length || 0, liked }
+    });
+  } catch (error) {
+    console.error('likeComment error', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const unlikeComment = async (req, res, next) => {
+  try {
+    const userId = ensureUser(req, res);
+    if (!userId) return;
+
+    const { id: commentId } = req.params;
+    if (!commentId) return res.status(400).json({ success: false, message: 'Comment id is required' });
+
+    const updated = await Comments.findByIdAndUpdate(
+      commentId,
+      { $pull: { likes: userId } },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ success: false, message: 'Comment not found' });
+
+    const liked = (updated.likes || []).some((l) => String(l) === String(userId));
+
+    res.status(200).json({
+      success: true,
+      message: !liked ? 'Comment unliked' : 'Unlike recorded',
+      data: { likesCount: updated.likes?.length || 0, liked }
+    });
+  } catch (error) {
+    console.error('unlikeComment error', error);
+    res.status(500).json({ message: error.message });
+  }
 };

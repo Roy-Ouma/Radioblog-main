@@ -467,3 +467,25 @@ export const adminCreatePodcast = async (payload, token) => {
     return { success: false, message };
   }
 };
+
+export const likeComment = async (commentId) => {
+  try {
+    const { data } = await api.post(`/posts/comment/${commentId}/like`);
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Liking comment failed:', message);
+    return { success: false, message };
+  }
+};
+
+export const unlikeComment = async (commentId) => {
+  try {
+    const { data } = await api.post(`/posts/comment/${commentId}/unlike`);
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error('Unliking comment failed:', message);
+    return { success: false, message };
+  }
+};

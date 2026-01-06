@@ -33,6 +33,9 @@ router.post("/create-post", userAuth, createPostLimiter, createPost);
 
 //LIKE & COMMENT ON POST
 router.post("/comment/:id", userAuth, commentLimiter, commentPost);
+// Comment like/unlike
+router.post("/comment/:id/like", userAuth, likeLimiter, likeComment);
+router.post("/comment/:id/unlike", userAuth, likeLimiter, unlikeComment);
 router.post("/like/:id", userAuth, likeLimiter, likePost);
 router.post("/unlike/:id", userAuth, likeLimiter, unlikePost);
 
