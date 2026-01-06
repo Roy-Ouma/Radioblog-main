@@ -12,22 +12,34 @@ import Pagination from "./components/Pagination";
 import Footer from "./components/Footer";  
 import PostComments from "./components/PostComments";
 import ShareButtons from "./components/ShareButtons";
+import FormInputField from "./FormInputField";
+import PasswordField from "./PasswordField";
+import FormCheckbox from "./FormCheckbox";
+import FormButton from "./FormButton";
+import OAuthButton from "./OAuthButton";
 
 //import Switch from "./components/Switch"       
 
 export {
     Loading, 
     Logo, 
-      Button,
-  Divider,
-  Inputbox,
- Banner,
- Card, 
- PopularPost,
+    Button,
+    Divider,
+    Inputbox,
+    Banner,
+    Card, 
+    PopularPost,
     PopularWriter,
- Navbar,
-Switch,
-Footer,
+    Navbar,
+    Footer,
+    PostComments,
+    ShareButtons,
+    FormInputField,
+    PasswordField,
+    FormCheckbox,
+    FormButton,
+    OAuthButton,
+};
 PostComments,
 Pagination,
 ShareButtons};

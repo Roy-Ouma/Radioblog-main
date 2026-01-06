@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { FcGoogle } from "react-icons/fc";
 import { Toaster, toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
-import Button from "../components/Button";
+import FormInputField from "../components/FormInputField";
+import PasswordField from "../components/PasswordField";
+import FormCheckbox from "../components/FormCheckbox";
+import FormButton from "../components/FormButton";
+import OAuthButton from "../components/OAuthButton";
 import useStore from "../store";
 import { emailSignIn, getGoogleSignIn } from "../utils/apiCalls";
 import { saveUserInfo } from "../utils/index";
@@ -18,7 +21,10 @@ const LoginPage = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
     if (userState?.token) {
@@ -26,10 +32,35 @@ const LoginPage = () => {
     }
   }, [userState, navigate]);
 
+  // Email validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!email.trim()) {
+      newErrors.email = "Email address is required";
+    } else if (!validateEmail(email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleEmailSignIn = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error("Please enter email and password");
+
+    if (!validateForm()) {
       return;
     }
 
@@ -37,6 +68,11 @@ const LoginPage = () => {
       setIsSubmitting(true);
       const result = await emailSignIn({ email, password });
       if (result?.success) {
+        if (rememberMe) {
+          localStorage.setItem("rememberEmail", email);
+        } else {
+          localStorage.removeItem("rememberEmail");
+        }
         saveUserInfo(result, signIn);
       } else {
         toast.error(result?.message || "Sign in failed. Please try again.");
@@ -51,7 +87,7 @@ const LoginPage = () => {
   const googleLogin = useGoogleLoginSafe({
     onSuccess: async (tokenResponse) => {
       try {
-        setIsLoading(true);
+        setGoogleLoading(true);
         const result = await getGoogleSignIn(tokenResponse.access_token);
         if (result?.success) {
           saveUserInfo(result, signIn);
@@ -61,29 +97,46 @@ const LoginPage = () => {
       } catch (error) {
         toast.error(error?.message || "Google sign-in failed. Please try again.");
       } finally {
-        setIsLoading(false);
+        setGoogleLoading(false);
       }
     },
     onError: () => {
       toast.error("Google sign-in was cancelled.");
+      setGoogleLoading(false);
     },
   });
 
   const hasGoogleClientId = !!process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
+  // Load remembered email on mount
+  useEffect(() => {
+    const remembered = localStorage.getItem("rememberEmail");
+    if (remembered) {
+      setEmail(remembered);
+      setRememberMe(true);
+    }
+  }, []);
+
   return (
     <div className="flex w-full min-h-screen">
       {/* Left side - Branding (hidden on mobile) */}
-      <div className="hidden md:flex flex-col gap-y-6 w-1/3 min-h-screen bg-gradient-to-b from-slate-900 to-black items-center justify-center px-8">
+      <div className="hidden md:flex flex-col gap-y-8 w-1/3 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-black items-center justify-center px-8">
         <Logo type="login" />
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
-          <p className="text-gray-400 text-sm">Sign in to continue to your dashboard</p>
+        <div className="space-y-4 text-center max-w-sm">
+          <h1 className="text-4xl font-bold text-white">Welcome Back</h1>
+          <p className="text-gray-300 text-base leading-relaxed">
+            Sign in to continue to your dashboard and access all your content
+          </p>
+          <div className="pt-4 space-y-2 text-sm text-gray-400">
+            <p>✓ Access your dashboard</p>
+            <p>✓ Manage your content</p>
+            <p>✓ Connect with your audience</p>
+          </div>
         </div>
       </div>
 
       {/* Right side - Form */}
-      <div className="flex w-full md:w-2/3 h-full bg-white dark:bg-slate-950 items-center justify-center px-4 sm:px-8 md:px-12 lg:px-16">
+      <div className="flex w-full md:w-2/3 min-h-screen bg-white dark:bg-slate-950 items-center justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-8">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="block md:hidden mb-8 text-center">
@@ -92,77 +145,120 @@ const LoginPage = () => {
 
           {/* Header */}
           <div className="mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">Sign In</h2>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">Enter your credentials to access your account</p>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Sign In
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Enter your credentials to access your account
+            </p>
           </div>
 
           {/* Email/Password Form - PRIMARY */}
-          <form onSubmit={handleEmailSignIn} className="space-y-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                disabled={isSubmitting}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                disabled={isSubmitting}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
-              />
-            </div>
-
-            <button
-              type="submit"
+          <form onSubmit={handleEmailSignIn} className="space-y-5 mb-8">
+            <FormInputField
+              label="Email Address"
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) {
+                  setErrors({ ...errors, email: "" });
+                }
+              }}
+              placeholder="your@email.com"
+              error={errors.email}
+              isRequired
               disabled={isSubmitting}
-              className="w-full py-2.5 rounded-lg font-semibold bg-orange-500 hover:bg-orange-600 text-white transition disabled:opacity-50"
-            >
-              {isSubmitting ? "Signing in..." : "Sign In"}
-            </button>
+              autoComplete="email"
+            />
+
+            <PasswordField
+              label="Password"
+              name="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (errors.password) {
+                  setErrors({ ...errors, password: "" });
+                }
+              }}
+              placeholder="••••••••"
+              error={errors.password}
+              isRequired
+              disabled={isSubmitting}
+              autoComplete="current-password"
+            />
+
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between gap-4">
+              <FormCheckbox
+                label="Remember me"
+                name="rememberMe"
+                value={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                disabled={isSubmitting}
+              />
+              <Link
+                to="#"
+                className="text-sm text-orange-500 hover:text-orange-600 dark:hover:text-orange-400 font-medium transition"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            <FormButton
+              label={isSubmitting ? "Signing in..." : "Sign In"}
+              type="submit"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+              variant="primary"
+              size="md"
+              fullWidth
+            />
           </form>
 
           {/* Divider */}
-          <div className="relative mb-6">
+          <div className="relative mb-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-slate-950 text-gray-600 dark:text-gray-400">Or continue with</span>
+              <span className="px-3 bg-white dark:bg-slate-950 text-gray-600 dark:text-gray-400 font-medium">
+                Or continue with
+              </span>
             </div>
           </div>
 
           {/* Google Sign-In - OPTIONAL */}
           {hasGoogleClientId && (
-            <button
+            <OAuthButton
+              provider="google"
               onClick={() => googleLogin()}
-              className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-900 transition font-medium text-gray-900 dark:text-white"
-            >
-              <FcGoogle className="text-xl" />
-              Sign in with Google
-            </button>
+              loading={googleLoading}
+              disabled={googleLoading || isSubmitting}
+              label="Sign in with Google"
+              fullWidth
+            />
           )}
 
           {/* Footer */}
-          <div className="mt-6 text-center text-sm">
+          <div className="mt-8 text-center text-sm">
             <p className="text-gray-600 dark:text-gray-400">
               Don't have an account?{" "}
-              <Link to="/sign-up" className="text-orange-500 hover:text-orange-600 font-semibold">
-                Sign up
+              <Link
+                to="/sign-up"
+                className="text-orange-500 hover:text-orange-600 dark:hover:text-orange-400 font-semibold transition"
+              >
+                Create one now
               </Link>
+            </p>
+          </div>
+
+          {/* Info Box */}
+          <div className="mt-8 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <p className="text-xs text-blue-700 dark:text-blue-300">
+              💡 <strong>Demo Tip:</strong> Use any valid email and password to test the authentication system.
             </p>
           </div>
         </div>
