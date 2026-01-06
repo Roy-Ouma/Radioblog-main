@@ -1,4 +1,5 @@
 import axios from "axios";
+import bcryptjs from "bcryptjs";
 import User from "../models/UserModel.js";
 import { createJWT } from "../utils/jwt.js";
 
@@ -25,6 +26,106 @@ const fetchGoogleProfile = async (accessToken) => {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return data;
+};
+
+/**
+ * Email/Password Sign Up
+ * Creates a new user account with email and password
+ * Users are created with "User" account type by default
+ */
+export const emailSignUp = async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Validation
+    if (!name || !name.trim()) {
+      return next(httpError(400, "Name is required."));
+    }
+    if (name.trim().length < 2) {
+      return next(httpError(400, "Name must be at least 2 characters."));
+    }
+    if (!email || !email.trim()) {
+      return next(httpError(400, "Email is required."));
+    }
+    if (!password) {
+      return next(httpError(400, "Password is required."));
+    }
+    if (password.length < 6) {
+      return next(httpError(400, "Password must be at least 6 characters."));
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+    if (existingUser) {
+      return next(httpError(409, "Email is already registered."));
+    }
+
+    // Hash password
+    const hashedPassword = await bcryptjs.hash(password, 10);
+
+    // Determine app context to set default role (client => User, admin => Writer)
+    const app = req.query.app || req.headers["x-app"] || "client";
+    const defaultRole = app === "admin" ? "Writer" : "User";
+
+    // Create new user
+    const newUser = await User.create({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password: hashedPassword,
+      accountType: defaultRole,
+      provider: "email",
+      emailVerified: false, // Email verification can be added later
+    });
+
+    return buildAuthResponse(res, newUser, "Account created successfully. Please sign in.", 201);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
+ * Email/Password Sign In
+ * Authenticates a user with email and password
+ */
+export const emailSignIn = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !email.trim()) {
+      return next(httpError(400, "Email is required."));
+    }
+    if (!password) {
+      return next(httpError(400, "Password is required."));
+    }
+
+    // Find user by email and include password field
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+password");
+    if (!user) {
+      return next(httpError(401, "Invalid email or password."));
+    }
+
+    // Check if password exists (for email-based accounts)
+    if (!user.password) {
+      return next(
+        httpError(401, "This account was created with Google OAuth. Please sign in with Google.")
+      );
+    }
+
+    // Compare passwords
+    const passwordMatch = await bcryptjs.compare(password, user.password);
+    if (!passwordMatch) {
+      return next(httpError(401, "Invalid email or password."));
+    }
+
+    // Update last login
+    user.lastLoginAt = new Date();
+    await user.save({ validateBeforeSave: false });
+
+    return buildAuthResponse(res, user, "Signed in successfully.");
+  } catch (error) {
+    return next(error);
+  }
 };
 
 /**
@@ -55,7 +156,7 @@ export const googleAuth = async (req, res, next) => {
     // Determine which app the request is coming from (default: client = "user")
     // You can pass ?app=admin in the request or set a header
     const app = req.query.app || req.headers["x-app"] || "client";
-    const defaultRole = app === "admin" ? "writer" : "user";
+    const defaultRole = app === "admin" ? "Writer" : "User";
 
     let user = await User.findOne({ email });
     
@@ -114,6 +215,8 @@ export const getCurrentUser = async (req, res, next) => {
 };
 
 export default {
+  emailSignUp,
+  emailSignIn,
   googleAuth,
   getCurrentUser,
 };

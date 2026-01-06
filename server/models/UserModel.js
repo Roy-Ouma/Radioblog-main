@@ -44,7 +44,7 @@ const userSchema = new Schema(
     provider: {
       type: String,
       enum: ["google", "email"],
-      default: "google",
+      default: "email",
     },
     emailVerified: {
       type: Boolean,
