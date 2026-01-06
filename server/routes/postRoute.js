@@ -16,6 +16,8 @@ import {
   deleteComment,
   likePost,
   unlikePost,
+  likeComment,
+  unlikeComment,
 } from '../controllers/postController.js';
 import { createShortLink } from '../controllers/shareController.js';
 import { getShareLink } from '../controllers/postController.js';
