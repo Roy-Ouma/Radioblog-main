@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useMantineColorScheme } from '@mantine/core';
 import clsx from 'clsx';
 import LoginForm from '../components/LoginForm';
 import SignUpForm from '../components/SignUpForm';
@@ -8,121 +7,89 @@ import { Toaster } from 'sonner';
 
 const Auth = () => {
   const [active, setActive] = useState('signin');
-  const { colorScheme } = useMantineColorScheme();
-  const theme = colorScheme === 'dark';
-
   const location = useLocation();
 
   useEffect(() => {
     try {
-      // allow linking to /auth?tab=signup or state.tab = 'signup'
       const params = new URLSearchParams(location.search || '');
       const tab = params.get('tab') || location.state?.tab;
       if (tab === 'signup') setActive('signup');
     } catch (e) {
       // ignore
     }
-    // only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <div className={clsx(
-      'w-full min-h-screen flex flex-col items-center justify-center px-4 py-8 md:py-16',
-      theme
-        ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-gray-900 to-black'
-        : 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white via-slate-50 to-gray-100'
-    )}>
-      {/* Header */}
-      <div className='mb-8 text-center'>
-        <h1 className={clsx(
-          'text-3xl md:text-4xl font-bold mb-2',
-          theme ? 'text-white' : 'text-gray-900'
-        )}>
-          Admin Panel
-        </h1>
-        <p className={clsx(
-          'text-sm md:text-base',
-          theme ? 'text-gray-400' : 'text-gray-600'
-        )}>
-          {active === 'signin' ? 'Sign in to your admin account' : 'Create your admin account'}
-        </p>
+    <div className="flex w-full min-h-screen">
+      {/* Left side - Branding (hidden on mobile) */}
+      <div className="hidden md:flex flex-col gap-y-8 w-1/3 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-black items-center justify-center px-8">
+        <div className="space-y-2 text-center">
+          <h1 className="text-4xl font-bold text-white">Admin Panel</h1>
+          <p className="text-gray-300 text-base">Manage your content and platform</p>
+        </div>
+        <div className="space-y-4 text-center max-w-sm">
+          <h2 className="text-2xl font-bold text-white">
+            {active === 'signin' ? 'Welcome Back' : 'Join as a Writer'}
+          </h2>
+          <p className="text-gray-300 text-base leading-relaxed">
+            {active === 'signin'
+              ? 'Sign in to access your admin dashboard and manage all your content'
+              : 'Create your account to start publishing and managing content as a writer'}
+          </p>
+          <div className="pt-4 space-y-2 text-sm text-gray-400">
+            <p>✓ Publish and manage content</p>
+            <p>✓ Track analytics</p>
+            <p>✓ Build your audience</p>
+          </div>
+        </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className='mb-6 flex gap-2 border-b border-opacity-20' style={{
-        borderColor: theme ? '#374151' : '#e2e8f0'
-      }}>
-        <button
-          onClick={() => setActive('signin')}
-          className={clsx(
-            'px-6 py-3 font-semibold text-sm transition-all duration-200 border-b-2',
-            active === 'signin'
-              ? theme
-                ? 'text-blue-400 border-blue-500'
-                : 'text-blue-600 border-blue-600'
-              : theme
-              ? 'text-gray-400 border-transparent hover:text-gray-300'
-              : 'text-gray-600 border-transparent hover:text-gray-900'
-          )}
-        >
-          Sign In
-        </button>
-        <button
-          onClick={() => setActive('signup')}
-          className={clsx(
-            'px-6 py-3 font-semibold text-sm transition-all duration-200 border-b-2',
-            active === 'signup'
-              ? theme
-                ? 'text-blue-400 border-blue-500'
-                : 'text-blue-600 border-blue-600'
-              : theme
-              ? 'text-gray-400 border-transparent hover:text-gray-300'
-              : 'text-gray-600 border-transparent hover:text-gray-900'
-          )}
-        >
-          Sign Up
-        </button>
-      </div>
+      {/* Right side - Form */}
+      <div className="flex w-full md:w-2/3 min-h-screen bg-white dark:bg-slate-950 items-center justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-8">
+        <div className="w-full max-w-md">
+          {/* Mobile Header */}
+          <div className="block md:hidden mb-8 text-center">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Admin Panel</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {active === 'signin' ? 'Sign in to your account' : 'Create your account'}
+            </p>
+          </div>
 
-      {/* Form Container */}
-      <div className='w-full max-w-4xl'>
-        {active === 'signin' && (
-          <LoginForm
-            isSignin={true}
-            setIsSignin={(updater) => {
-              // allow child to pass a boolean or an updater function
-              if (typeof updater === 'function') {
-                const current = active === 'signin';
-                const next = updater(current);
-                setActive(next ? 'signin' : 'signup');
-              } else {
-                setActive(updater ? 'signin' : 'signup');
-              }
-            }}
-            toggle={() => {}}
-            toast={{ success: () => {}, error: () => {} }}
-            setFormClose={() => {}}
-          />
-        )}
-        
-        {active === 'signup' && (
-          <SignUpForm
-            isSignin={false}
-            setIsSignin={(updater) => {
-              if (typeof updater === 'function') {
-                const current = active === 'signin';
-                const next = updater(current);
-                setActive(next ? 'signin' : 'signup');
-              } else {
-                setActive(updater ? 'signin' : 'signup');
-              }
-            }}
-            toggle={() => {}}
-            toast={{ success: () => {}, error: () => {} }}
-            setFormClose={() => {}}
-          />
-        )}
+          {/* Tab Navigation */}
+          <div className="flex gap-0 border-b-2 border-gray-200 dark:border-gray-700 mb-8">
+            <button
+              onClick={() => setActive('signin')}
+              className={clsx(
+                'flex-1 py-3 font-semibold text-sm transition-all duration-200 border-b-2 -mb-0.5',
+                active === 'signin'
+                  ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-300'
+              )}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setActive('signup')}
+              className={clsx(
+                'flex-1 py-3 font-semibold text-sm transition-all duration-200 border-b-2 -mb-0.5',
+                active === 'signup'
+                  ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-300'
+              )}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          {/* Form Container */}
+          {active === 'signin' && (
+            <LoginForm setIsSignin={setActive} />
+          )}
+
+          {active === 'signup' && (
+            <SignUpForm setIsSignin={setActive} />
+          )}
+        </div>
       </div>
 
       <Toaster richColors />

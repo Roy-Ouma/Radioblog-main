@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  emailSignUp,
+  emailSignIn,
   googleAuth,
   getCurrentUser,
 } from "../controllers/authController.js";
@@ -8,7 +10,11 @@ import { authLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
-// Google OAuth only
+// Email/Password authentication
+router.post("/signup", authLimiter, emailSignUp);
+router.post("/login", authLimiter, emailSignIn);
+
+// Google OAuth
 router.post("/google", authLimiter, googleAuth);
 router.post("/google-signup", authLimiter, googleAuth); // backward compatible alias
 
