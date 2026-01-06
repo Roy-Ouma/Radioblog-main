@@ -63,19 +63,22 @@ export const emailSignUp = async (req, res, next) => {
     // Hash password
     const hashedPassword = await bcryptjs.hash(password, 10);
 
-    // Determine app context to set default role (client => User, admin => Writer)
+    // Determine app context; only set `accountType` explicitly for admin signups
     const app = req.query.app || req.headers["x-app"] || "client";
-    const defaultRole = app === "admin" ? "Writer" : "User";
 
-    // Create new user
-    const newUser = await User.create({
+    const userObj = {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
-      accountType: defaultRole,
       provider: "email",
       emailVerified: false, // Email verification can be added later
-    });
+    };
+
+    if (app === "admin") {
+      userObj.accountType = "Writer"; // Admin app signups become Writers by default
+    }
+
+    const newUser = await User.create(userObj);
 
     return buildAuthResponse(res, newUser, "Account created successfully. Please sign in.", 201);
   } catch (error) {
@@ -156,20 +159,20 @@ export const googleAuth = async (req, res, next) => {
     // Determine which app the request is coming from (default: client = "user")
     // You can pass ?app=admin in the request or set a header
     const app = req.query.app || req.headers["x-app"] || "client";
-    const defaultRole = app === "admin" ? "Writer" : "User";
-
     let user = await User.findOne({ email });
-    
+
     if (!user) {
-      // Create new user with role based on signup context
-      user = await User.create({
+      // Create new user, only set accountType for admin signups so client signups use the model default
+      const userObj = {
         name: googleProfile.name || email.split("@")[0],
         email,
         image: googleProfile.picture || "",
         provider: "google",
         emailVerified: !!googleProfile.email_verified,
-        accountType: defaultRole,
-      });
+      };
+      if (app === "admin") userObj.accountType = "Writer";
+
+      user = await User.create(userObj);
     } else {
       // Update existing user to ensure Google provider is set and profile is current
       user.provider = "google";
