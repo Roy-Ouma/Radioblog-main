@@ -43,7 +43,7 @@ const userSchema = new Schema(
     },
     provider: {
       type: String,
-      enum: ["google"],
+      enum: ["google", "email"],
       default: "google",
     },
     emailVerified: {
@@ -91,13 +91,9 @@ userSchema.methods.toSafeObject = function toSafeObject() {
   return doc;
 };
 
-// Enforce that all users use Google OAuth only
+// Ensure emailVerified for Google accounts; do not overwrite explicit provider
 userSchema.pre('save', function (next) {
   try {
-    if (this.provider !== 'google') {
-      this.provider = 'google';
-    }
-    // Google OAuth users are always verified
     if (this.provider === 'google') {
       this.emailVerified = true;
     }
