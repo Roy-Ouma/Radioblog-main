@@ -97,7 +97,8 @@ app.use(cors(corsOptions));
 // Explicit preflight handler for OPTIONS requests
 // Use '/*' instead of '*' to avoid a PathError from path-to-regexp
 // when Express registers the route in some environments.
-app.options('/*', cors(corsOptions));
+app.options('/:path(*)', cors());
+
 
 app.use(globalLimiter);
 // Sentry request handler (must be before routes)
