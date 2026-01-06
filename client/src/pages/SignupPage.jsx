@@ -1,116 +1,218 @@
 import { useGoogleLoginSafe } from '../hooks/useGoogleLoginSafe';
 import React, { useEffect, useState } from "react";
 import { Toaster, toast } from "sonner";
-import { Link } from "react-router-dom";
-import { FcGoogle} from "react-icons/fc";
-import { IoArrowBackCircleSharp } from "react-icons/io5";
+import { Link, useNavigate } from "react-router-dom";
+import { FcGoogle } from "react-icons/fc";
 import Logo from "../components/Logo";
-import Button from "../components/Button";
-import { getGoogleSignUp } from "../utils/apiCalls";
+import { emailSignUp, getGoogleSignUp } from "../utils/apiCalls";
+import { saveUserInfo } from "../utils/index";
 import useStore from "../store";
 
-
-
 const SignupPage = () => {
-  // guard against useStore() returning null/undefined during startup
   const store = useStore() || {};
   const user = store?.user ?? null;
   const signIn = store?.signIn ?? (() => {});
   const setIsLoading = store?.setIsLoading ?? (() => {});
+  const navigate = useNavigate();
 
-  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const hasGoogleClientId = !!process.env.REACT_APP_GOOGLE_CLIENT_ID;
-  
+
+  useEffect(() => {
+    if (user && user.token) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+
+  const handleEmailSignUp = async (e) => {
+    e.preventDefault();
+    
+    if (!name || !email || !password || !passwordConfirm) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (password !== passwordConfirm) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const result = await emailSignUp({ name, email, password });
+      if (result?.success) {
+        saveUserInfo(result, signIn);
+      } else {
+        toast.error(result?.message || "Sign up failed. Please try again.");
+      }
+    } catch (error) {
+      toast.error(error?.message || "Sign up failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const GoogleLogin = useGoogleLoginSafe({
     onSuccess: async (tokenResponse) => {
       if (!hasGoogleClientId) {
         toast.error('Google OAuth is not configured.');
         return;
       }
-      const setLoading = typeof setIsLoading === "function" ? setIsLoading : null;
       try {
-        setLoading && setLoading(true);
+        setIsLoading?.(true);
         const userResp = await getGoogleSignUp(tokenResponse?.access_token);
 
         if (userResp?.success === true) {
-          // signIn is provided by the store; persist the authenticated user
           signIn(userResp);
-          if (userResp.token) window.location.replace("/");
           toast.success("Account created successfully!");
+          setTimeout(() => window.location.replace("/"), 600);
         } else {
-          toast.error(userResp?.message || "Google Sign-Up failed. Please try again.");
+          toast.error(userResp?.message || "Google sign-up failed. Please try again.");
         }
       } catch (err) {
-        toast.error("Google Sign-Up failed. Please try again.");
+        toast.error("Google sign-up failed. Please try again.");
       } finally {
-        setLoading && setLoading(false);
+        setIsLoading?.(false);
       }
     },
     onError: () => {
-      toast.error('Google Sign-Up failed. Please try again.');
+      toast.error('Google sign-up was cancelled.');
     },
   });
 
-  // redirect only when user becomes available and has a token
-  useEffect(() => {
-    if (user && user.token) {
-      window.location.replace("/");
-    }
-  }, [user]);
-  
-
   return (
-    <div className="flex w-full min-h-[100vh]">
-      {/* Left side - Logo and Welcome (hidden on mobile) */}
-      <div className="hidden md:flex flex-col gap-y-4 w-1/3 min-h-screen bg-gradient-to-b from-black to-gray-900 items-center justify-center px-8">
+    <div className="flex w-full min-h-screen">
+      {/* Left side - Branding (hidden on mobile) */}
+      <div className="hidden md:flex flex-col gap-y-6 w-1/3 min-h-screen bg-gradient-to-b from-slate-900 to-black items-center justify-center px-8">
         <Logo type="Sign-up" />
-        <span className="text-2xl font-bold text-white text-center">
-          Join Our Community
-        </span>
-        <span className="text-gray-400 text-center text-sm max-w-xs">
-          Share your stories, connect with readers, and grow your audience
-        </span>
+        <div className="space-y-2 text-center">
+          <h1 className="text-3xl font-bold text-white">Join Our Community</h1>
+          <p className="text-gray-400 text-sm">Share your stories, connect with readers, and grow your audience</p>
+        </div>
       </div>
 
-      {/* Right side - Main content */}
-      <div className="flex flex-col gap-y-4 w-full md:w-2/3 min-h-screen bg-white dark:bg-gradient-to-br from-gray-900 via-[#0f172a] to-black items-center justify-center px-4 sm:px-6 md:px-12 lg:px-20 xl:px-32">
-        <div className="w-full h-full flex flex-col items-center justify-center py-8 sm:py-12">
+      {/* Right side - Form */}
+      <div className="flex w-full md:w-2/3 min-h-screen bg-white dark:bg-slate-950 items-center justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-8 sm:py-12">
+        <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="block mb-8 md:hidden">
+          <div className="block md:hidden mb-8 text-center">
             <Logo />
           </div>
 
           {/* Header */}
-          <div className="w-full max-w-md flex gap-3 md:gap-4 items-center justify-start mb-10">  
-            {showForm && (
-              <IoArrowBackCircleSharp 
-                className="text-2xl lg:text-3xl cursor-pointer text-gray-800 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-100 transition"
-                onClick={() => setShowForm(false)}
-              />
-            )}
-            <h2 className="text-2xl lg:text-3xl font-extrabold text-gray-900 dark:text-white">
-              {showForm ? "Create Account" : "Get Started"}
-            </h2>
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">Create Account</h2>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">Sign up to get started with our platform</p>
           </div>
 
-          {/* Google Sign-Up Only */}
-          <div className="w-full max-w-md space-y-4">
-            {hasGoogleClientId && (
-              <Button 
-                onClick={() => GoogleLogin()}
-                label="Sign up with Google"
-                icon={<FcGoogle className="text-xl" />}
-                styles="w-full flex items-center gap-3 justify-center bg-white dark:bg-gray-800 dark:border dark:border-gray-700 text-gray-900 dark:text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm"
+          {/* Email/Password Form - PRIMARY */}
+          <form onSubmit={handleEmailSignUp} className="space-y-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                disabled={isSubmitting}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
               />
-            )}
+            </div>
 
-            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                disabled={isSubmitting}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                disabled={isSubmitting}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+              />
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Minimum 6 characters</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                placeholder="••••••••"
+                disabled={isSubmitting}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-2.5 rounded-lg font-semibold bg-orange-500 hover:bg-orange-600 text-white transition disabled:opacity-50"
+            >
+              {isSubmitting ? "Creating Account..." : "Sign Up"}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-slate-950 text-gray-600 dark:text-gray-400">Or continue with</span>
+            </div>
+          </div>
+
+          {/* Google Sign-Up - OPTIONAL */}
+          {hasGoogleClientId && (
+            <button
+              onClick={() => GoogleLogin()}
+              type="button"
+              className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-900 transition font-medium text-gray-900 dark:text-white"
+            >
+              <FcGoogle className="text-xl" />
+              Sign up with Google
+            </button>
+          )}
+
+          {/* Footer */}
+          <div className="mt-6 text-center text-sm">
+            <p className="text-gray-600 dark:text-gray-400">
               Already have an account?{" "}
-              <Link to="/sign-in" className="text-orange-500 dark:text-orange-400 font-semibold hover:underline">
+              <Link to="/sign-in" className="text-orange-500 hover:text-orange-600 font-semibold">
                 Sign in
               </Link>
-            </div>
+            </p>
           </div>
         </div>
       </div>
