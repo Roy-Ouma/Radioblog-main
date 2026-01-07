@@ -103,10 +103,11 @@ app.use(globalLimiter);
 if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.requestHandler());
 }
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.json({ limit: "30mb" }));
-app.use(express.urlencoded({ extended: true }));
+// Configure body parsers with generous size limits to allow larger uploads
+app.use(bodyParser.json({ limit: process.env.BODY_PARSER_LIMIT || "50mb" }));
+app.use(bodyParser.urlencoded({ limit: process.env.BODY_PARSER_LIMIT || "50mb", extended: true }));
+app.use(express.json({ limit: process.env.BODY_PARSER_LIMIT || "50mb" }));
+app.use(express.urlencoded({ limit: process.env.BODY_PARSER_LIMIT || "50mb", extended: true }));
 app.use(morgan("dev"));
 // Serve uploaded files from the uploads directory
 // Ensure uploaded files can be loaded cross-origin by setting CORP to allow cross-origin

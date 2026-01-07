@@ -66,7 +66,14 @@ function initFirebase() {
 }
 
 const router = express.Router();
-const upload = multer();
+// Use memory storage and enforce a sensible per-file size limit.
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    // Allow up to 50 MB per uploaded file by default; override with UPLOAD_FILE_LIMIT_BYTES env var
+    fileSize: process.env.UPLOAD_FILE_LIMIT_BYTES ? parseInt(process.env.UPLOAD_FILE_LIMIT_BYTES, 10) : 50 * 1024 * 1024,
+  },
+});
 
 // Ensure uploads directory exists
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
