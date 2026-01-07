@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from "react-router-dom";
 import Profile from "../assets/profile.png"
 import { formatNumber } from '../utils/index.js';
+import { FaEye } from 'react-icons/fa';
 
 
 
@@ -17,7 +18,7 @@ const PopularWriter = ({ data = [] }) => {
        <div className="w-full bg-white dark:bg-slate-850 rounded-b-2xl p-6 border border-t-0 border-slate-200 dark:border-slate-700 space-y-4">
         {data.length === 0 ? (
           <span className="text-sm text-gray-500 dark:text-gray-400 block py-4">
-            Writers with the most followers will appear here soon.
+            Writers with the most views will appear here soon.
           </span>
         ) : (
           <div className="space-y-4">
@@ -38,9 +39,10 @@ const PopularWriter = ({ data = [] }) => {
                     {el?.name || "Unknown"}
                   </span>
 
-                  <span className="text-sm font-medium">
-                    <span className="text-rose-600 dark:text-rose-400">{formatNumber(el?.followers)}</span>
-                    <span className="text-gray-600 dark:text-slate-400 ml-1">Followers</span>
+                  <span className="text-sm font-medium flex items-center gap-1">
+                    <FaEye className="text-blue-600 dark:text-blue-400" size={14} />
+                    <span className="text-blue-600 dark:text-blue-400">{formatNumber(el?.totalViews || 0)}</span>
+                    <span className="text-gray-600 dark:text-slate-400">Views</span>
                   </span>
                 </div>
               </Link>
