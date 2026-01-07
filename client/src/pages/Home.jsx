@@ -55,6 +55,7 @@ const Home = () => {
     };
 
     loadPopular();
+    // nothing else to load here for sidebar writers
     return () => {
       isMounted = false;
     };

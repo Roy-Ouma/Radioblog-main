@@ -126,7 +126,7 @@ const PodcastDetail = () => {
         </div>
 
         <div className="mt-6">
-          <strong>Share:</strong>
+          <strong>Shabeee</strong>
           <div className="flex gap-2 mt-2">
             <a target="_blank" rel="noreferrer" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(podcast.title)}&url=${encodeURIComponent(window.location.href)}`} className="px-3 py-2 bg-blue-500 text-white rounded">Twitter</a>
             <a target="_blank" rel="noreferrer" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} className="px-3 py-2 bg-blue-700 text-white rounded">Facebook</a>

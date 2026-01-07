@@ -6,6 +6,7 @@ import useStore from "../store";
 import { fetchPopularContent, fetchPostById, fetchWriterById, logShare } from "../utils/apiCalls";
 import PopularPost from "../components/PopularPost";
 import PopularWriter from "../components/PopularWriter";
+import { fetchCategories } from "../utils/apiCalls";
 import PostComments from "../components/PostComments";
 import { FaTwitter, FaFacebookF, FaWhatsapp } from 'react-icons/fa';
 import { FiLink } from 'react-icons/fi';
@@ -20,6 +21,7 @@ const BlogDetails = () => {
 
   const [post, setPost] = useState(null);
   const [popularContent, setPopularContent] = useState({ posts: [], writers: [] });
+  const [categories, setCategories] = useState([]);
   const [authorWriter, setAuthorWriter] = useState(null);
   const currentUserId = store?.user?.user?._id;
   const [liked, setLiked] = useState(Boolean(store?.user && post?.likes?.some((l) => String(l) === String(currentUserId))));
@@ -92,13 +94,16 @@ const BlogDetails = () => {
       });
     };
     loadPopular();
+    fetchCategories().then((res) => {
+      if (!isMounted) return;
+      if (res?.success && Array.isArray(res.data)) setCategories(res.data);
+    }).catch(() => {});
     return () => {
       isMounted = false;
     };
   }, []);
 
   // categories are sourced from shared constants to match site-wide styling
-  const categories = CATEGORIES;
 
   if (isFetchingPost && !post) {
     return (
