@@ -467,22 +467,36 @@ export const getPopularContents = async (req, res, next) => {
       }
     ]);
 
-    const writers = await Users.aggregate([
+    // Aggregate writers by total post views (sum of views across their posts)
+    const writers = await Posts.aggregate([
+      { $match: { status: true, approved: true } },
       {
-        $match: {
-          accountType: { $ne: "User" }
+        $group: {
+          _id: '$user',
+          totalViews: { $sum: { $size: { $ifNull: ["$views", []] } } },
+          postCount: { $sum: 1 }
         }
       },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: false } },
+      { $match: { 'user.accountType': { $ne: 'User' } } },
       {
         $project: {
-          name: 1,
-          image: 1,
-          followers: { $size: { $ifNull: ["$followers", []] } },
+          _id: '$user._id',
+          name: '$user.name',
+          image: '$user.image',
+          totalViews: 1,
+          postCount: 1
         }
       },
-      {
-        $sort: { followers: -1 },
-      },
+      { $sort: { totalViews: -1 } },
       { $limit: 5 }
     ]);
 
