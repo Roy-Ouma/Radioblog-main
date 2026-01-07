@@ -317,6 +317,7 @@ export const fetchWriterById = async (userId) => {
   }
 };
 
+/*
 export const followWriter = async (writerId) => {
   try {
     const { data } = await api.post(`/users/follow/${writerId}`);
@@ -338,6 +339,11 @@ export const unfollowWriter = async (writerId) => {
     return { success: false, message };
   }
 };
+
+Note: The client-side follow/unfollow API helpers are commented out because follow functionality
+has been removed from the client UI. The backend endpoints remain but are unused by the client.
+Uncomment these if you plan to re-enable client follow actions in the future.
+*/
 
 export const uploadImage = async (file) => {
   try {

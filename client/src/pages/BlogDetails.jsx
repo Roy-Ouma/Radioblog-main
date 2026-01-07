@@ -3,11 +3,10 @@ import { Link, useParams } from "react-router-dom";
 import Markdown from "markdown-to-jsx";
 import { toast } from "sonner";
 import useStore from "../store";
-import { fetchPopularContent, fetchPostById, fetchWriterById, followWriter, unfollowWriter, logShare } from "../utils/apiCalls";
+import { fetchPopularContent, fetchPostById, fetchWriterById, logShare } from "../utils/apiCalls";
 import PopularPost from "../components/PopularPost";
 import PopularWriter from "../components/PopularWriter";
 import PostComments from "../components/PostComments";
-import ConfirmModal from "../components/ConfirmModal";
 import { FaTwitter, FaFacebookF, FaWhatsapp } from 'react-icons/fa';
 import { FiLink } from 'react-icons/fi';
 import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai';
@@ -22,11 +21,9 @@ const BlogDetails = () => {
   const [post, setPost] = useState(null);
   const [popularContent, setPopularContent] = useState({ posts: [], writers: [] });
   const [authorWriter, setAuthorWriter] = useState(null);
-  const [authorConfirmOpen, setAuthorConfirmOpen] = useState(false);
   const currentUserId = store?.user?.user?._id;
   const [liked, setLiked] = useState(Boolean(store?.user && post?.likes?.some((l) => String(l) === String(currentUserId))));
   const [likesCount, setLikesCount] = useState(post?.likes?.length || 0);
-  const [isProcessingAuthorFollow, setIsProcessingAuthorFollow] = useState(false);
   const [isFetchingPost, setIsFetchingPost] = useState(false);
 
   useEffect(() => {
@@ -82,50 +79,7 @@ const BlogDetails = () => {
     };
   }, [id, setIsLoading]);
 
-  const authorFollowerIds = (authorWriter?.followers || []).map((f) => f?.followerId);
-  const isFollowingAuthor = authorFollowerIds.includes(store?.user?.user?._id);
-
-  const handleAuthorFollow = async () => {
-    if (!store?.user?.token) {
-      toast.error('Please sign in to follow writers.');
-      return;
-    }
-
-    if (!post?.user?._id) {
-      toast.error('Writer information not available.');
-      return;
-    }
-
-    try {
-      setIsProcessingAuthorFollow(true);
-      if (!isFollowingAuthor) {
-        // optimistic
-        setAuthorWriter((w) => ({ ...w, followers: [...(w?.followers || []), { followerId: store.user.user._id }] }));
-        const res = await followWriter(post?.user?._id);
-        if (!res?.success) {
-          setAuthorWriter((w) => ({ ...w, followers: (w?.followers || []).filter((f) => f?.followerId !== store.user.user._id) }));
-          toast.error(res?.message || 'Unable to follow writer.');
-        } else {
-          toast.success(res.message || 'You are now following this writer.');
-        }
-      } else {
-        const prev = authorWriter?.followers || [];
-        setAuthorWriter((w) => ({ ...w, followers: (w?.followers || []).filter((f) => f?.followerId !== store.user.user._id) }));
-        const res = await unfollowWriter(post?.user?._id);
-        if (!res?.success) {
-          setAuthorWriter((w) => ({ ...w, followers: prev }));
-          toast.error(res?.message || 'Unable to unfollow writer.');
-        } else {
-          toast.success(res.message || 'You have unfollowed this writer.');
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error(err?.message || 'Unable to update follow status.');
-    } finally {
-      setIsProcessingAuthorFollow(false);
-    }
-  };
+  // Follow functionality removed from client-side UI
 
   useEffect(() => {
     let isMounted = true;
@@ -244,41 +198,7 @@ const BlogDetails = () => {
                 ) : (
                   <span className="text-sm text-slate-500">Profile unavailable</span>
                 )}
-                {store?.user?.token && (
-                  <>
-                    {!isFollowingAuthor ? (
-                      <button
-                        onClick={handleAuthorFollow}
-                        disabled={isProcessingAuthorFollow}
-                        className="px-3 py-1.5 rounded bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold"
-                      >
-                        Follow
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => setAuthorConfirmOpen(true)}
-                          disabled={isProcessingAuthorFollow}
-                          className="px-3 py-1.5 rounded bg-gray-600 dark:bg-gray-700 text-white text-sm font-semibold"
-                        >
-                          Unfollow
-                        </button>
-                        <ConfirmModal
-                          opened={authorConfirmOpen}
-                          title="Unfollow writer"
-                          message={`Unfollow ${post?.user?.name}?`}
-                          confirmLabel="Unfollow"
-                          cancelLabel="Cancel"
-                          onCancel={() => setAuthorConfirmOpen(false)}
-                          onConfirm={async () => {
-                            setAuthorConfirmOpen(false);
-                            await handleAuthorFollow();
-                          }}
-                        />
-                      </>
-                    )}
-                  </>
-                )}
+                {/* Follow buttons removed from client UI */}
               </div>
             </div>
         </div>

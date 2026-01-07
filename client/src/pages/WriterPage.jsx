@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { FaUserCheck } from "react-icons/fa";
+// follow UI removed: FaUserCheck not needed
 import useStore from "../store";
 import { formatNumber } from "../utils";
 import NoProfile from "../assets/profile.png";
 import Button from "../components/Button";
 import Card from "../components/Card";
 import Pagination from "../components/Pagination";
-import { fetchPosts, fetchWriterById, followWriter, unfollowWriter, uploadImage } from "../utils/apiCalls";
-import ConfirmModal from "../components/ConfirmModal";
+import { fetchPosts, fetchWriterById, uploadImage } from "../utils/apiCalls";
+// follow UI removed: ConfirmModal not needed
 import { toast } from "sonner";
 
 const WriterPage = () => {
@@ -71,64 +71,7 @@ const WriterPage = () => {
     loadPosts();
   }, [loadPosts]);
 
-  const followerIds = writer?.followers?.map((follower) => follower?.followerId) || [];
-  const [isProcessingFollow, setIsProcessingFollow] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-
-  const handleFollow = async () => {
-    if (!authUser?.token) {
-      toast.error("Please sign in to follow writers.");
-      return;
-    }
-
-    // optimistic update
-    const myId = authUser?.user?._id;
-    const currentlyFollowing = followerIds.includes(myId);
-
-    try {
-      setIsProcessingFollow(true);
-
-      if (!currentlyFollowing) {
-        // optimistically add
-        setWriter((w) => ({
-          ...w,
-          followers: [...(w?.followers || []), { followerId: myId }],
-        }));
-
-        const res = await followWriter(id);
-        if (!res?.success) {
-          // revert
-          setWriter((w) => ({
-            ...w,
-            followers: (w?.followers || []).filter((f) => f?.followerId !== myId),
-          }));
-          toast.error(res?.message || "Unable to follow writer.");
-        } else {
-          toast.success(res.message || "You are now following this writer.");
-        }
-      } else {
-        // optimistically remove
-        const prevFollowers = writer?.followers || [];
-        setWriter((w) => ({
-          ...w,
-          followers: (w?.followers || []).filter((f) => f?.followerId !== myId),
-        }));
-
-        const res = await unfollowWriter(id);
-        if (!res?.success) {
-          // revert
-          setWriter((w) => ({ ...w, followers: prevFollowers }));
-          toast.error(res?.message || "Unable to unfollow writer.");
-        } else {
-          toast.success(res.message || "You have unfollowed this writer.");
-        }
-      }
-    } catch (error) {
-      toast.error(error?.message || "Unable to update follow status.");
-    } finally {
-      setIsProcessingFollow(false);
-    }
-  };
+  // Follow functionality removed from client-side UI
 
   // Profile tabs for the owner
   const [activeTab, setActiveTab] = useState("profile");
@@ -186,17 +129,11 @@ const WriterPage = () => {
           <div className="md:col-span-2 space-y-6">
             <div className="space-y-2">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">{writer?.name}</h1>
-              <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">Content Creator</p>
+              <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">Writer / Contributor</p>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white dark:bg-gray-700/50 rounded-lg p-4 space-y-1">
-                <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                  {formatNumber(writer?.followers?.length ?? 0)}
-                </p>
-                <span className="text-sm text-gray-600 dark:text-gray-400">Followers</span>
-              </div>
+            {/* Stats Grid (Followers removed) */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="bg-white dark:bg-gray-700/50 rounded-lg p-4 space-y-1">
                 <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(writer?.postsCount ?? posts.length)}
@@ -213,39 +150,7 @@ const WriterPage = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
-              {authUser?.token && (
-                <>
-                  {!followerIds.includes(authUser?.user?._id) ? (
-                    <Button
-                      label="Follow Writer"
-                      onClick={handleFollow}
-                      styles="text-white font-semibold px-6 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg transition-shadow"
-                    />
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => setConfirmOpen(true)}
-                        className="px-6 py-2 rounded-lg bg-gray-600 dark:bg-gray-700 text-white font-semibold hover:bg-gray-700 transition-shadow flex items-center gap-2"
-                      >
-                        <span>Unfollow</span>
-                        <FaUserCheck />
-                      </button>
-                      <ConfirmModal
-                        opened={confirmOpen}
-                        title="Unfollow writer"
-                        message={`Unfollow ${writer?.name}?`}
-                        confirmLabel="Unfollow"
-                        cancelLabel="Cancel"
-                        onCancel={() => setConfirmOpen(false)}
-                        onConfirm={async () => {
-                          setConfirmOpen(false);
-                          await handleFollow();
-                        }}
-                      />
-                    </>
-                  )}
-                </>
-              )}
+              {/* Follow buttons removed from client UI */}
 
               {/* Profile tabs shown when viewing your own profile */}
               {authUser?.user?._id === writer?._id && (
