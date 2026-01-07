@@ -15,8 +15,8 @@ import { fetchPosts } from '../utils/apiCalls';
  * Features:
  * - Case-insensitive partial keyword matching
  * - Live dropdown results as you type
- * - Smart navigation: single result → auto-navigate, multiple → show results
- * - Relevance-sorted results
+ * - User-selectable results (click to navigate)
+ * - Relevance-sorted results with 300ms debounce
  * - Mobile and desktop responsive
  */
 const SearchBox = ({ onClose = () => {} }) => {
@@ -66,14 +66,6 @@ const SearchBox = ({ onClose = () => {} }) => {
         const results = searchPosts(allPosts, trimmedQuery);
         setSearchResults(results);
         setShowResults(true);
-
-        // Smart navigation: auto-navigate if single result
-        if (results.length === 1) {
-          // Delay slightly so user can see the result before navigation
-          setTimeout(() => {
-            handleResultClick(results[0]._id || results[0].id);
-          }, 300);
-        }
       } catch (error) {
         console.error("Search error:", error);
         setSearchResults([]);
