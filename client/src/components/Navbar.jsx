@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { AiOutlineClose } from 'react-icons/ai';
 import { FaFacebook, FaInstagram, FaTwitterSquare, FaYoutube } from 'react-icons/fa';
 import { Link } from "react-router-dom";
@@ -6,31 +6,154 @@ import { useNavigate } from 'react-router-dom';
 import useStore from "../store";
 import Logo from '../components/Logo';
 import ThemeSwitch from './Switch';
+import SearchResults from './SearchResults';
+import { searchPosts, isValidSearchTerm } from '../utils/searchUtils';
+import { fetchPosts } from '../utils/apiCalls';
 
-// simple search box component placed inside Navbar
-const SearchBox = () => {
+/**
+ * Enhanced SearchBox with live results dropdown
+ * Features:
+ * - Case-insensitive partial keyword matching
+ * - Live dropdown results as you type
+ * - Smart navigation: single result → auto-navigate, multiple → show results
+ * - Relevance-sorted results
+ * - Mobile and desktop responsive
+ */
+const SearchBox = ({ onClose = () => {} }) => {
   const [q, setQ] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [allPosts, setAllPosts] = useState([]);
   const navigate = useNavigate();
 
-  const submit = (e) => {
+  // Load all posts once for client-side searching
+  useEffect(() => {
+    const loadAllPosts = async () => {
+      try {
+        const response = await fetchPosts({ limit: 1000 }); // Load up to 1000 posts
+        if (response?.success && response.data) {
+          setAllPosts(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to load posts for search:", error);
+      }
+    };
+
+    loadAllPosts();
+  }, []);
+
+  // Debounced search handler
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const trimmedQuery = String(q || "").trim();
+
+      if (!trimmedQuery) {
+        setShowResults(false);
+        setSearchResults([]);
+        return;
+      }
+
+      if (!isValidSearchTerm(trimmedQuery)) {
+        setShowResults(false);
+        setSearchResults([]);
+        return;
+      }
+
+      // Perform client-side search
+      setIsLoading(true);
+      try {
+        const results = searchPosts(allPosts, trimmedQuery);
+        setSearchResults(results);
+        setShowResults(true);
+
+        // Smart navigation: auto-navigate if single result
+        if (results.length === 1) {
+          // Delay slightly so user can see the result before navigation
+          setTimeout(() => {
+            handleResultClick(results[0]._id || results[0].id);
+          }, 300);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+        setSearchResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [q, allPosts]);
+
+  const handleResultClick = useCallback(
+    (postId) => {
+      setShowResults(false);
+      setQ("");
+      onClose();
+      navigate(`/blog/${postId}`);
+    },
+    [navigate, onClose]
+  );
+
+  const handleFormSubmit = (e) => {
     e?.preventDefault?.();
-    const term = String(q || "").trim();
-    if (!term) return;
-    // navigate to category page with search param (server supports `search` query)
-    navigate(`/category?search=${encodeURIComponent(term)}`);
-    setQ("");
+    const trimmedQuery = String(q || "").trim();
+
+    if (!trimmedQuery) return;
+
+    // If results are showing, use the first result
+    if (showResults && searchResults.length > 0) {
+      handleResultClick(searchResults[0]._id || searchResults[0].id);
+    } else if (trimmedQuery) {
+      // Fallback: navigate to category page with search param (server-side search)
+      setQ("");
+      setShowResults(false);
+      onClose();
+      navigate(`/category?search=${encodeURIComponent(trimmedQuery)}`);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Close results after a brief delay to allow click on result
+    setTimeout(() => {
+      setShowResults(false);
+    }, 200);
   };
 
   return (
-    <form onSubmit={submit} className="w-full">
+    <form onSubmit={handleFormSubmit} className="w-full relative">
       <div className="relative">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          onFocus={() => q && setShowResults(true)}
+          onBlur={handleInputBlur}
           placeholder="Search posts..."
-          className="w-full px-3 py-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+          className="w-full px-3 py-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors focus:border-rose-400 dark:focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:focus:ring-rose-500 focus:ring-opacity-30"
         />
-        <button type="submit" aria-label="Search" className="absolute right-1 top-1/2 -translate-y-1/2 px-3 py-1 rounded-full bg-black text-white text-sm">Go</button>
+        <button
+          type="submit"
+          aria-label="Search"
+          className="absolute right-1 top-1/2 -translate-y-1/2 px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium transition-colors"
+        >
+          Go
+        </button>
+
+        {/* Search results dropdown */}
+        {showResults && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+            <SearchResults
+              results={searchResults}
+              searchTerm={q}
+              isLoading={isLoading}
+              onResultClick={() => {
+                setShowResults(false);
+                setQ("");
+                onClose();
+              }}
+            />
+          </div>
+        )}
       </div>
     </form>
   );
@@ -83,7 +206,7 @@ const Navbar = () => {
 
           {/* Search bar */}
           <div className="ml-6 w-80">
-            <SearchBox />
+            <SearchBox onClose={() => {}} />
           </div>
         </div>
 
@@ -169,7 +292,7 @@ const Navbar = () => {
               {/* Mobile podcast link and search */}
               <Link to='/podcasts' onClick={() => setMobileOpen(false)} className='text-base text-black dark:text-white'>Podcasts</Link>
               <div className="mt-4">
-                <SearchBox />
+                <SearchBox onClose={() => setMobileOpen(false)} />
               </div>
 
               <div className="mt-6 flex items-center gap-3">
