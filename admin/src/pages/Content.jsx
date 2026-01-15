@@ -5,13 +5,14 @@ import {
   Badge,
   Group,
   useMantineColorScheme,
+  Select,
 } from "@mantine/core";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import useStore from "../store";
 import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { useAction, useContent, useDeletePost } from "../hooks/post-hook";
-import { formatNumber, updateURL } from "../utils";
+import { formatNumber, updateURL, stripHtml } from "../utils";
 import clsx from "clsx";
 import { Toaster, toast } from "sonner";
 import { AiOutlineEye, AiOutlineSetting } from "react-icons/ai";
@@ -20,6 +21,7 @@ import moment from "moment";
 import { BiDotsVerticalRounded } from "react-icons/bi";
 import Loading from "../components/Loading";
 import ConfirmDialog from "../components/ConfirmDialog";
+import EditPostModal from "../components/EditPostModal";
 import useCommentStore from "../store/commentStore";
 import Comments from "../components/Comments";
 
@@ -35,13 +37,34 @@ const Contents = () => {
   const { user } = useStore();
   const { setOpen, commentId, setCommentId } = useCommentStore();
 
-  const { data, isPending, mutate } = useContent(toast, toggle, user?.token);
+  const { data, isPending, mutate } = useContent(toast, toggle, user?.token, (result) => {
+    let fetchedPosts = result?.data || [];
+    // Apply current sort
+    fetchedPosts = fetchedPosts.sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'views':
+          return (b.views?.length || 0) - (a.views?.length || 0);
+        default:
+          return 0;
+      }
+    });
+    setPosts(fetchedPosts);
+  });
   const useDelete = useDeletePost(toast, user?.token);
   const useActions = useAction(toast, user?.token);
 
   const [selected, setSelected] = useState("");
   const [type, setType] = useState(null);
   const [status, setStatus] = useState(null);
+  const [editingPost, setEditingPost] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [sortBy, setSortBy] = useState("newest");
   const [page, setPage] = useState(searchParams.get("page") || 1);
 
   const theme = colorScheme === "dark";
@@ -56,6 +79,16 @@ const Contents = () => {
       setCommentId(id);
       setOpen(true);
     }
+  };
+
+  const handleEdit = (post) => {
+    setEditingPost(post);
+  };
+
+  const handlePostUpdated = (updatedPost) => {
+    // Update the post in the list
+    setPosts((list) => list.map((p) => p._id === updatedPost._id ? { ...p, ...updatedPost } : p));
+    setEditingPost(null);
   };
 
   const handlePerformAction = (val, id, status) => {
@@ -95,8 +128,42 @@ const Contents = () => {
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
               Total: {data?.totalPost || 0} posts
-              {data?.data?.length ? ` • Showing ${(data?.page - 1) * data?.data?.length + 1}-${Math.min((data?.page || 1) * data?.data?.length, data?.totalPost || 0)}` : ""}
+              {posts?.length ? ` • Showing ${(data?.page - 1) * posts?.length + 1}-${Math.min((data?.page || 1) * posts?.length, data?.totalPost || 0)}` : ""}
             </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Select
+              label="Sort by"
+              placeholder="Select sort order"
+              data={[
+                { value: 'newest', label: 'Newest First' },
+                { value: 'oldest', label: 'Oldest First' },
+                { value: 'title', label: 'Title A-Z' },
+                { value: 'views', label: 'Most Viewed' },
+              ]}
+              value={sortBy}
+              onChange={(value) => {
+                setSortBy(value);
+                // Sort the current posts
+                const sorted = [...posts].sort((a, b) => {
+                  switch (value) {
+                    case 'newest':
+                      return new Date(b.createdAt) - new Date(a.createdAt);
+                    case 'oldest':
+                      return new Date(a.createdAt) - new Date(b.createdAt);
+                    case 'title':
+                      return a.title.localeCompare(b.title);
+                    case 'views':
+                      return (b.views?.length || 0) - (a.views?.length || 0);
+                    default:
+                      return 0;
+                  }
+                });
+                setPosts(sorted);
+              }}
+              size="sm"
+              style={{ minWidth: 150 }}
+            />
           </div>
         </div>
 
@@ -104,13 +171,13 @@ const Contents = () => {
           <div className="flex items-center justify-center py-16 section-container">
             <div className="text-slate-600 dark:text-slate-400">Loading posts...</div>
           </div>
-        ) : data?.data?.length === 0 ? (
+        ) : posts?.length === 0 ? (
           <div className="section-container text-center py-16">
             <p className="text-slate-600 dark:text-slate-400">No posts found.</p>
           </div>
         ) : (
           <div className="space-y-4 flex-1 overflow-y-auto">
-            {data?.data?.map((post) => (
+            {posts?.map((post) => (
               <div
                 key={post._id}
                 className="section-container group hover:shadow-md transition-shadow"
@@ -140,7 +207,7 @@ const Contents = () => {
                       </Badge>
                     </div>
                     <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3">
-                      {(post.desc || post.description || "").slice(0, 150)}
+                      {stripHtml((post.desc || post.description || "")).slice(0, 150)}
                     </p>
                     <div className="flex flex-wrap gap-4 text-sm">
                       <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
@@ -167,6 +234,11 @@ const Contents = () => {
                       <div className="text-xs text-slate-500 dark:text-slate-400">
                         {post.user?.email}
                       </div>
+                      {post.approved && post.approvedBy && (
+                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          Approved by: {post.approvedBy?.name || "Unknown"}
+                        </div>
+                      )}
                     </div>
                     <div className="mb-3">
                       <span
@@ -198,6 +270,12 @@ const Contents = () => {
                       </Menu.Target>
 
                       <Menu.Dropdown>
+                        <Menu.Item
+                          leftSection={<AiOutlineSetting size={16} />}
+                          onClick={() => handleEdit(post)}
+                        >
+                          Edit Post
+                        </Menu.Item>
                         <Menu.Item
                           leftSection={<AiOutlineSetting size={16} />}
                           onClick={() =>
@@ -248,6 +326,15 @@ const Contents = () => {
         opened={opened}
         close={close}
         handleClick={handleActions}
+      />
+
+      <EditPostModal
+        opened={!!editingPost}
+        onClose={() => setEditingPost(null)}
+        post={editingPost}
+        token={user?.token}
+        onPostUpdated={handlePostUpdated}
+        isApproved={editingPost?.approved}
       />
 
       {commentId && <Comments />}

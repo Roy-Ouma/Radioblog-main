@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Modal, Button, Textarea, TextInput, Group, Stack, Tabs, ScrollArea, Badge, Text, Grid, Image, Paper, Loader } from "@mantine/core";
 import { toast } from "sonner";
 import axios from "axios";
-import { API_URI } from "../utils";
+import { API_URI, stripHtml } from "../utils";
 
 const EditPostModal = ({ opened, onClose, post, token, onPostUpdated, isApproved }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -230,7 +230,7 @@ const EditPostModal = ({ opened, onClose, post, token, onPostUpdated, isApproved
                 {formData.desc && formData.desc.trim() ? (
                   <div className="prose dark:prose-invert max-w-none">
                     <div className="text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap min-h-32 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                      {formData.desc}
+                      {stripHtml(formData.desc)}
                     </div>
                   </div>
                 ) : (

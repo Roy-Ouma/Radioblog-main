@@ -18,6 +18,8 @@ import useStore from "./store";
 import { useEffect } from "react";
 import Contact from "./pages/Contact"; // Add this import
 import About from "./pages/About"; // Add this import
+import FactCheckList from "./pages/FactCheckList";
+import FactCheckDetail from "./pages/FactCheckDetail";
 
 // Initialize Sentry for error tracking (optional - requires REACT_APP_SENTRY_DSN env var)
 if (process.env.REACT_APP_SENTRY_DSN) {
@@ -88,6 +90,8 @@ function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/fact-check" element={<FactCheckList />} />
+                <Route path="/fact-check/:slug/:id" element={<FactCheckDetail />} />
               </Route>
               {/* Auth routes */}
               <Route path="/sign-up" element={<SignupPage />} />

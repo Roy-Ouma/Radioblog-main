@@ -66,7 +66,7 @@ export const useCreatePost = (toast, toggle, token) => {
   });
 };
 
-export const useContent = (toast, toggle, token) => {
+export const useContent = (toast, toggle, token, onSuccessCallback) => {
   return useMutation({
     mutationFn: async (page) => {
       toggle();
@@ -95,6 +95,7 @@ export const useContent = (toast, toggle, token) => {
     onSuccess: (data) => {
       toggle();
       toast.success(data?.message);
+      if (onSuccessCallback) onSuccessCallback(data);
     },
   });
 };

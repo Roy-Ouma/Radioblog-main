@@ -24,5 +24,6 @@ export const CATEGORIES = [
   { label: "FOOD", color: "bg-[#f43f5e]", icon: <FaUtensils /> },
   { label: "CULTURE", color: "bg-[#db2777]", icon: <GiDramaMasks /> },
   { label: "ART", color: "bg-[#ec4899]", icon: <FaPalette /> },
+  { label: "FACT-CHECK", color: "bg-[#64748b]", icon: <FaBalanceScale /> },
 ];
 

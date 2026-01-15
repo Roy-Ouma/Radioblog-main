@@ -20,7 +20,7 @@ router.get('/logs', generalAdminAuth, accessLog(), async (req, res) => {
     const p = Math.max(1, parseInt(page, 10) || 1);
     const l = Math.min(200, parseInt(limit, 10) || 50);
     const skip = (p - 1) * l;
-    const logs = await AccessLog.find().sort({ createdAt: -1 }).skip(skip).limit(l).lean();
+    const logs = await AccessLog.find().sort({ createdAt: -1 }).populate('userId', 'name email').skip(skip).limit(l).lean();
     const total = await AccessLog.countDocuments();
     return res.json({ success: true, data: logs, meta: { total, page: p, limit: l } });
   } catch (err) {
@@ -147,7 +147,7 @@ router.post('/posts/:id/unapprove', generalAdminAuth, accessLog(), async (req, r
 router.patch('/posts/:id', adminAuth, accessLog(), async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, desc, description, img, cat } = req.body;
+    const { title, desc, description, img, cat, featured } = req.body;
     const Posts = (await import('../models/Posts.js')).default;
     
     const post = await Posts.findById(id).populate({ path: 'user', select: 'name email' });
@@ -167,6 +167,13 @@ router.patch('/posts/:id', adminAuth, accessLog(), async (req, res) => {
     if (descValue !== undefined && descValue.trim()) post.desc = descValue;
     if (img !== undefined) post.img = img;
     if (cat !== undefined) post.cat = cat;
+    if (featured !== undefined) {
+      if (featured === true) {
+        // Unset featured on all other posts
+        await Posts.updateMany({ _id: { $ne: id }, featured: true }, { featured: false });
+      }
+      post.featured = featured;
+    }
 
     const updated = await post.save();
     return res.json({ 

@@ -18,6 +18,9 @@ import {
   unlikePost,
   likeComment,
   unlikeComment,
+  getFeaturedPost,
+  setFeaturedPost,
+  removeFeaturedPost,
 } from '../controllers/postController.js';
 import { createShortLink } from '../controllers/shareController.js';
 import { getShareLink } from '../controllers/postController.js';
@@ -53,6 +56,11 @@ router.get('/share-link/:id', getShareLink);
 router.post('/short-link/:id', createShortLink);
 router.get("/:id", getPost);
 router.get("/comments/:postId", getComments);
+
+// Featured banner routes
+router.get("/featured", getFeaturedPost);
+router.post("/featured", adminAuth, setFeaturedPost);
+router.delete("/featured", adminAuth, removeFeaturedPost);
 
 // Share analytics logging
 router.post('/share/:id', logShare);

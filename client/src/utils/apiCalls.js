@@ -107,6 +107,17 @@ export const fetchPosts = async (params = {}) => {
   }
 };
 
+export const fetchFeaturedPost = async () => {
+  try {
+    const { data } = await api.get("/posts/featured");
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error("Fetching featured post failed:", message);
+    return { success: false, message };
+  }
+};
+
 export const fetchPostById = async (postId) => {
   try {
     const { data } = await api.get(`/posts/${postId}`);

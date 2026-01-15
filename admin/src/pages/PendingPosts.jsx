@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import useStore from "../store";
-import { API_URI } from "../utils";
+import { API_URI, stripHtml } from "../utils";
 import { toast } from "sonner";
 import { Pagination, Button, Group, Badge } from "@mantine/core";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -143,7 +143,7 @@ const PendingPosts = () => {
                     </Badge>
                   </div>
                   <p className="text-sm muted line-clamp-2 mb-3">
-                    {(post.desc || post.description || "")?.slice(0, 180)}
+                    {stripHtml((post.desc || post.description || "")).slice(0, 180)}
                   </p>
                   <Group gap="xs" wrap="wrap">
                     <Button 

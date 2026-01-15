@@ -15,7 +15,7 @@ import {
   rem,
   useMantineColorScheme,
 } from "@mantine/core";
-import { IconSun, IconMoon } from "@tabler/icons-react";
+import { IconSun, IconMoon, IconStar } from "@tabler/icons-react";
 import { BsPencilSquare } from "react-icons/bs";
 import { useLocation, useNavigate } from "react-router-dom";
 import clsx from "clsx";
@@ -26,7 +26,9 @@ const mockdata = [
     { icon: IconCalendarStats, label: "Content", to: "contents" },
     { icon: IconCalendarStats, label: "Pending", to: "pending" },
     { icon: IconCalendarStats, label: "Share Logs", to: "share-logs" },
+    { icon: IconCalendarStats, label: "Access Logs", to: "access-logs" },
     { icon: IconCalendarStats, label: "Banners", to: "banners" },
+    { icon: IconStar, label: "Featured Banner", to: "featured-banner" },
   { icon: IconUser, label: "Followers", to: "followers" },
   { icon: BsPencilSquare, label: "Create Post", to: "write" },
   { icon: IconSettings, label: "Settings" },

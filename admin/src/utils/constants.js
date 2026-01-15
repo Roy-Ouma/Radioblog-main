@@ -17,5 +17,6 @@ export const CATEGORIES = [
   { label: "OPINION", value: "OPINION" },
   { label: "CULTURE", value: "CULTURE" },
   { label: "ART", value: "ART" },
+  { label: "FACT-CHECK", value: "fact-check" },
 ];
 

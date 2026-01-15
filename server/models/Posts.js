@@ -15,6 +15,7 @@ const postSchema = new mongoose.Schema({
   approved: { type: Boolean, default: false },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   approvedAt: { type: Date },
+  featured: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const Posts = mongoose.model("Posts", postSchema);

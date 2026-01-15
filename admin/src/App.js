@@ -13,6 +13,7 @@ import WritePost from "./pages/WritePost";
 import Users from "./pages/Users";
 import PendingPosts from "./pages/PendingPosts";
 import ShareLogs from "./pages/ShareLogs";
+import AccessLogs from "./pages/AccessLogs";
 import Banners from "./pages/Banners";
 import Categories from "./pages/Categories";
 import CreatePodcast from "./pages/CreatePodcast";
@@ -20,6 +21,8 @@ import CreateShow from "./pages/CreateShow";
 import PodcastsList from "./pages/PodcastsList";
 import ShowEpisodes from "./pages/ShowEpisodes";
 import Profile from "./pages/Profile";
+import FactCheckWriter from "./pages/FactCheckWriter";
+import FeaturedBanner from "./pages/FeaturedBanner";
 
 function Layout() {
   const { user } = useStore((state) => state);
@@ -59,12 +62,15 @@ function App() {
           <Route path='/contents' element={<Contents />} />
           <Route path='/pending' element={<PendingPosts />} />
           <Route path='/share-logs' element={<ShareLogs />} />
+          <Route path='/access-logs' element={<AccessLogs />} />
           <Route path='/banners' element={<Banners />} />
+          <Route path='/featured-banner' element={<FeaturedBanner />} />
           <Route path='/podcasts' element={<PodcastsList />} />
           <Route path='/podcasts/create' element={<CreatePodcast />} />
           <Route path='/podcasts/create-show' element={<CreateShow />} />
           <Route path='/podcasts/:id/episodes' element={<ShowEpisodes />} />
           <Route path='/write/:postId?' element={<WritePost />} />
+          <Route path='/fact-check/write' element={<FactCheckWriter />} />
         </Route>
 
         <Route path='/auth' element={<Auth />} />

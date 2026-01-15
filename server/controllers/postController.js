@@ -366,9 +366,13 @@ export const updatePost = async (req, res, next) => {
 
 export const getPosts = async (req, res, next) => {
   try {
-    const { cat, writerId, search } = req.query;
+    const { cat, writerId, search, featured } = req.query;
 
     const filter = { status: true, approved: true };
+
+    if (featured === 'true') {
+      filter.featured = true;
+    }
 
     if (cat) {
       const categories = Array.isArray(cat)
@@ -697,6 +701,77 @@ export const unlikeComment = async (req, res, next) => {
     });
   } catch (error) {
     console.error('unlikeComment error', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Featured post management
+export const getFeaturedPost = async (req, res) => {
+  try {
+    const featuredPost = await Posts.findOne({ featured: true, status: true, approved: true })
+      .populate({
+        path: "user",
+        select: "name image",
+      });
+
+    if (featuredPost) {
+      res.status(200).json({
+        success: true,
+        data: [featuredPost] // Return as array for consistency with fetchPosts
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        data: []
+      });
+    }
+  } catch (error) {
+    console.error('getFeaturedPost error', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const setFeaturedPost = async (req, res) => {
+  try {
+    const { postId } = req.body;
+
+    if (!postId) {
+      return res.status(400).json({ success: false, message: 'Post ID is required' });
+    }
+
+    // Check if post exists and is published
+    const post = await Posts.findById(postId);
+    if (!post || !post.status || !post.approved) {
+      return res.status(404).json({ success: false, message: 'Post not found or not published' });
+    }
+
+    // Unset all featured posts
+    await Posts.updateMany({ featured: true }, { featured: false });
+
+    // Set the new featured post
+    post.featured = true;
+    await post.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Featured post updated successfully'
+    });
+  } catch (error) {
+    console.error('setFeaturedPost error', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const removeFeaturedPost = async (req, res) => {
+  try {
+    await Posts.updateMany({ featured: true }, { featured: false });
+
+    res.status(200).json({
+      success: true,
+      message: 'Featured post removed successfully'
+    });
+  } catch (error) {
+    console.error('removeFeaturedPost error', error);
     res.status(500).json({ message: error.message });
   }
 };
