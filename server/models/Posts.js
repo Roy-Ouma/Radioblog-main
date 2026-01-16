@@ -16,6 +16,9 @@ const postSchema = new mongoose.Schema({
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   approvedAt: { type: Date },
   featured: { type: Boolean, default: false },
+  engagedViews: { type: Number, default: 0 },
+  totalVisits: { type: Number, default: 0 },
+  averageReadTime: { type: Number, default: 0 },
 }, { timestamps: true });
 
 const Posts = mongoose.model("Posts", postSchema);

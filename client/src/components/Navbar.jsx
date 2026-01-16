@@ -175,10 +175,10 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto flex items-center py-4 px-4 md:px-8 gap-4">
         {/* Left: socials (desktop only) */}
         <div className='hidden md:flex items-center gap-3 text-[20px]'>
-          <Link to='/' className='text-red-600'><FaYoutube /></Link>
-          <Link to='/' className='text-blue-600'><FaFacebook /></Link>
-          <Link to='/' className='text-rose-600'><FaInstagram /></Link>
-          <Link to='/' className='text-blue-500'><FaTwitterSquare /></Link>
+          <a href='https://www.youtube.com/@masenotv' target='_blank' rel='noopener noreferrer' className='text-red-600'><FaYoutube /></a>
+          <a href='https://www.facebook.com/MasenoRadio' target='_blank' rel='noopener noreferrer' className='text-blue-600'><FaFacebook /></a>
+          <a href='https://www.instagram.com/masenoradio98.1fm/' target='_blank' rel='noopener noreferrer' className='text-rose-600'><FaInstagram /></a>
+          <a href='/' className='text-blue-500'><FaTwitterSquare /></a>
         </div>
 
         {/* Center: logo */}
@@ -321,10 +321,10 @@ const Navbar = () => {
               </div>
 
               <div className="mt-8 flex gap-4">
-                <Link to='https://www.youtube.com/@masenotv' className='text-red-600 text-2xl'><FaYoutube /></Link>
-                <Link to='https://www.facebook.com/MasenoRadio' className='text-blue-600 text-2xl'><FaFacebook /></Link>
-                <Link to='https://www.instagram.com/masenoradio98.1fm/' className='text-rose-600 text-2xl'><FaInstagram /></Link>
-                <Link to='/' className='text-blue-500 text-2xl'><FaTwitterSquare /></Link>
+                <a href='https://www.youtube.com/@masenotv' target='_blank' rel='noopener noreferrer' className='text-red-600 text-2xl'><FaYoutube /></a>
+                <a href='https://www.facebook.com/MasenoRadio' target='_blank' rel='noopener noreferrer' className='text-blue-600 text-2xl'><FaFacebook /></a>
+                <a href='https://www.instagram.com/masenoradio98.1fm/' target='_blank' rel='noopener noreferrer' className='text-rose-600 text-2xl'><FaInstagram /></a>
+                <a href='/' className='text-blue-500 text-2xl'><FaTwitterSquare /></a>
               </div>
             </nav>
           </div>

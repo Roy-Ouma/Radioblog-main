@@ -2,6 +2,7 @@ import Posts from "../models/Posts.js";
 import Users from "../models/Users.js";
 import Comments from "../models/Comment.js";
 import Views from "../models/Views.js";
+import EngagementSession from "../models/EngagementSession.js";
 import mongoose from "mongoose";
 import Followers from "../models/Followers.js";
 import { createUniqueSlug } from "../utils/slugUtils.js";
@@ -529,14 +530,8 @@ export const getPost = async (req, res, next) => {
         select: 'name image'
       });
 
-    const newView = await Views.create({
-      user: post?.user,
-      post: postId,
-    });
-
-    post.views.push(newView?._id);
-
-    await Posts.findByIdAndUpdate(postId, post);
+    // Increment total visits
+    await Posts.findByIdAndUpdate(postId, { $inc: { totalVisits: 1 } });
 
     res.status(200).json({
       success: true,
@@ -773,5 +768,64 @@ export const removeFeaturedPost = async (req, res) => {
   } catch (error) {
     console.error('removeFeaturedPost error', error);
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const recordEngagedView = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { sessionId, timeSpent } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({ success: false, message: 'Session ID is required' });
+    }
+
+    const post = await Posts.findById(id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    // Check if this session has already been counted for this post
+    const existingSession = await EngagementSession.findOne({ post: id, sessionId, counted: true });
+    if (existingSession) {
+      return res.status(200).json({ success: true, message: 'View already recorded' });
+    }
+
+    // Find or create engagement session
+    let session = await EngagementSession.findOne({ post: id, sessionId });
+    if (!session) {
+      session = new EngagementSession({
+        post: id,
+        sessionId,
+        ip: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent'),
+        startTime: new Date(),
+      });
+    }
+
+    // Update session with time spent
+    session.totalTime = (session.totalTime || 0) + (timeSpent || 0);
+    session.endTime = new Date();
+
+    // Check if engaged (at least 30 seconds)
+    if (session.totalTime >= 30 && !session.engaged) {
+      session.engaged = true;
+      session.counted = true;
+
+      // Increment engaged views
+      await Posts.findByIdAndUpdate(id, {
+        $inc: { engagedViews: 1 },
+        $set: {
+          averageReadTime: ((post.averageReadTime * post.engagedViews) + session.totalTime) / (post.engagedViews + 1)
+        }
+      });
+    }
+
+    await session.save();
+
+    res.status(200).json({ success: true, message: 'Engagement recorded' });
+  } catch (error) {
+    console.error('recordEngagedView error', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

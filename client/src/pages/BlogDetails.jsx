@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import Markdown from "markdown-to-jsx";
 import { toast } from "sonner";
 import useStore from "../store";
-import { fetchPopularContent, fetchPostById, fetchWriterById, logShare } from "../utils/apiCalls";
+import { fetchPopularContent, fetchPostById, fetchWriterById, logShare, recordEngagedView } from "../utils/apiCalls";
 import PopularPost from "../components/PopularPost";
 import PopularWriter from "../components/PopularWriter";
 import { fetchCategories } from "../utils/apiCalls";
@@ -27,6 +27,13 @@ const BlogDetails = () => {
   const [liked, setLiked] = useState(Boolean(store?.user && post?.likes?.some((l) => String(l) === String(currentUserId))));
   const [likesCount, setLikesCount] = useState(post?.likes?.length || 0);
   const [isFetchingPost, setIsFetchingPost] = useState(false);
+
+  // Engagement tracking
+  const [sessionId] = useState(() => crypto.randomUUID());
+  const [engagementTime, setEngagementTime] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const [engagedViewRecorded, setEngagedViewRecorded] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -102,6 +109,64 @@ const BlogDetails = () => {
       isMounted = false;
     };
   }, []);
+
+  // Engagement tracking
+  useEffect(() => {
+    if (!post || !id) return;
+
+    let timer;
+    let startTime = Date.now();
+
+    const updateEngagement = () => {
+      if (isVisible && hasInteracted) {
+        setEngagementTime(prev => prev + 1);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+      if (document.hidden) {
+        // Pause timer
+        if (timer) clearInterval(timer);
+      } else {
+        // Resume timer
+        startTime = Date.now();
+        timer = setInterval(updateEngagement, 1000);
+      }
+    };
+
+    const handleScroll = () => {
+      setHasInteracted(true);
+    };
+
+    const handleClick = () => {
+      setHasInteracted(true);
+    };
+
+    // Start tracking
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('click', handleClick);
+
+    if (!document.hidden) {
+      timer = setInterval(updateEngagement, 1000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('click', handleClick);
+    };
+  }, [post, id, isVisible, hasInteracted]);
+
+  // Record engaged view after 30 seconds
+  useEffect(() => {
+    if (engagementTime >= 30 && !engagedViewRecorded && post && id) {
+      recordEngagedView(id, sessionId, engagementTime);
+      setEngagedViewRecorded(true);
+    }
+  }, [engagementTime, engagedViewRecorded, post, id, sessionId]);
 
   // categories are sourced from shared constants to match site-wide styling
 
@@ -181,7 +246,7 @@ const BlogDetails = () => {
               {post?.cat}
             </span>
             <span className="flex items-baseline gap-1 text-slate-700 dark:text-gray-300">
-              <span className="text-lg md:text-2xl font-bold text-slate-900 dark:text-white">{post?.views?.length || 0}</span>
+              <span className="text-lg md:text-2xl font-bold text-slate-900 dark:text-white">{post?.engagedViews || 0}</span>
               <span className="text-xs md:text-sm text-slate-500 dark:text-slate-400">views</span>
             </span>
           </div>

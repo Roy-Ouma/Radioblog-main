@@ -129,6 +129,17 @@ export const fetchPostById = async (postId) => {
   }
 };
 
+export const recordEngagedView = async (postId, sessionId, timeSpent) => {
+  try {
+    const { data } = await api.post(`/posts/${postId}/engaged-view`, { sessionId, timeSpent });
+    return data;
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    console.error("Recording engaged view failed:", message);
+    return { success: false, message };
+  }
+};
+
 export const fetchComments = async (postId) => {
   try {
     const { data } = await api.get(`/posts/comments/${postId}`);

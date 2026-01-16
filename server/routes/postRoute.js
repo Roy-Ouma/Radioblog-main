@@ -21,6 +21,7 @@ import {
   getFeaturedPost,
   setFeaturedPost,
   removeFeaturedPost,
+  recordEngagedView,
 } from '../controllers/postController.js';
 import { createShortLink } from '../controllers/shareController.js';
 import { getShareLink } from '../controllers/postController.js';
@@ -61,6 +62,9 @@ router.get("/comments/:postId", getComments);
 router.get("/featured", getFeaturedPost);
 router.post("/featured", adminAuth, setFeaturedPost);
 router.delete("/featured", adminAuth, removeFeaturedPost);
+
+// Engagement tracking
+router.post("/:id/engaged-view", recordEngagedView);
 
 // Share analytics logging
 router.post('/share/:id', logShare);
