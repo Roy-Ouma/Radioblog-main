@@ -803,6 +803,20 @@ export const recordEngagedView = async (req, res) => {
       });
     }
 
+    // If user is logged in, associate with user ID for better tracking
+    if (req.user?.userId) {
+      // Check if this user has already viewed this post
+      const userView = await EngagementSession.findOne({
+        post: id,
+        userId: req.user.userId,
+        counted: true
+      });
+      if (userView) {
+        return res.status(200).json({ success: true, message: 'View already recorded for this user' });
+      }
+      session.userId = req.user.userId;
+    }
+
     // Update session with time spent
     session.totalTime = (session.totalTime || 0) + (timeSpent || 0);
     session.endTime = new Date();

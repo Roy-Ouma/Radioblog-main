@@ -33,7 +33,11 @@ const BlogDetails = () => {
   const [engagementTime, setEngagementTime] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [engagedViewRecorded, setEngagedViewRecorded] = useState(false);
+  const [engagedViewRecorded, setEngagedViewRecorded] = useState(() => {
+    // Check if this post has already been viewed by this device
+    const viewedPosts = JSON.parse(localStorage.getItem('viewedPosts') || '{}');
+    return viewedPosts[id] || false;
+  });
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -163,8 +167,15 @@ const BlogDetails = () => {
   // Record engaged view after 30 seconds
   useEffect(() => {
     if (engagementTime >= 30 && !engagedViewRecorded && post && id) {
-      recordEngagedView(id, sessionId, engagementTime);
-      setEngagedViewRecorded(true);
+      recordEngagedView(id, sessionId, engagementTime).then((result) => {
+        if (result?.success) {
+          // Mark this post as viewed in localStorage
+          const viewedPosts = JSON.parse(localStorage.getItem('viewedPosts') || '{}');
+          viewedPosts[id] = true;
+          localStorage.setItem('viewedPosts', JSON.stringify(viewedPosts));
+          setEngagedViewRecorded(true);
+        }
+      });
     }
   }, [engagementTime, engagedViewRecorded, post, id, sessionId]);
 
@@ -244,10 +255,6 @@ const BlogDetails = () => {
           <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-4 text-sm md:text-base">
             <span className="text-rose-600 dark:text-rose-500 font-semibold px-3 py-1 bg-rose-50 dark:bg-rose-950 rounded-full">
               {post?.cat}
-            </span>
-            <span className="flex items-baseline gap-1 text-slate-700 dark:text-gray-300">
-              <span className="text-lg md:text-2xl font-bold text-slate-900 dark:text-white">{post?.engagedViews || 0}</span>
-              <span className="text-xs md:text-sm text-slate-500 dark:text-slate-400">views</span>
             </span>
           </div>
             <div className="flex gap-4 items-center group hover:opacity-80 transition-opacity w-fit">

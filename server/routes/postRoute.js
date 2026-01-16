@@ -27,7 +27,7 @@ import { createShortLink } from '../controllers/shareController.js';
 import { getShareLink } from '../controllers/postController.js';
 import { logShare } from '../controllers/shareController.js';
 import { getActiveBanners } from '../controllers/bannerController.js';
-import { commentLimiter, createPostLimiter, likeLimiter } from '../middleware/rateLimiter.js';
+import { commentLimiter, createPostLimiter, likeLimiter, engagementLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();// Controller functions (to be implemented)
 //ADMIN ROUTES
@@ -64,7 +64,7 @@ router.post("/featured", adminAuth, setFeaturedPost);
 router.delete("/featured", adminAuth, removeFeaturedPost);
 
 // Engagement tracking
-router.post("/:id/engaged-view", recordEngagedView);
+router.post("/:id/engaged-view", engagementLimiter, recordEngagedView);
 
 // Share analytics logging
 router.post('/share/:id', logShare);

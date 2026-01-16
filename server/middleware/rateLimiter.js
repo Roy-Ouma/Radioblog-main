@@ -53,3 +53,13 @@ export const createPostLimiter = rateLimit({
   keyGenerator: (req) => req.user?.userId || req.ip,
   skip: (req) => process.env.NODE_ENV !== 'production',
 });
+
+// Engagement tracking rate limiter: 20 per hour per IP (to prevent abuse)
+export const engagementLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: 'Too many engagement requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => process.env.NODE_ENV !== 'production',
+});

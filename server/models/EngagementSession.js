@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const engagementSessionSchema = new mongoose.Schema({
   post: { type: mongoose.Schema.Types.ObjectId, ref: "Posts", required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Optional: for logged-in users
   sessionId: { type: String, required: true },
   ip: { type: String },
   userAgent: { type: String },
