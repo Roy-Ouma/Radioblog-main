@@ -203,7 +203,7 @@ router.get('/posts/pending', adminAuth, accessLog(), async (req, res) => {
     const filter = { $or: [{ approved: false }, { approved: { $exists: false } }] };
     const total = await Posts.countDocuments(filter);
     const posts = await Posts.find(filter)
-      .select('title slug desc img cat views comments status approved approvedBy approvedAt createdAt updatedAt user')
+      .select('title slug desc img cat engagedViews comments status approved approvedBy approvedAt createdAt updatedAt user')
       .populate({ path: 'user', select: 'name email image' })
       .populate({ path: 'approvedBy', select: 'name email' })
       .sort({ createdAt: -1 })
@@ -387,8 +387,8 @@ router.get('/analytics', adminAuth, accessLog(), async (req, res) => {
     const Users = (await import('../models/UserModel.js')).default;
     const Posts = (await import('../models/Posts.js')).default;
     const Followers = (await import('../models/Followers.js')).default;
-    let Views;
-    try { Views = (await import('../models/Views.js')).default; } catch (e) {}
+    // Engagement-based totals (use engagedViews and engagement sessions)
+    const EngagementSession = (await import('../models/EngagementSession.js')).default;
 
     // 1. Get Totals (Accurate Counts)
     // We filter by { status: true } to count ONLY published posts.
@@ -396,7 +396,13 @@ router.get('/analytics', adminAuth, accessLog(), async (req, res) => {
     const totalPosts = await Posts.countDocuments({ status: true }); 
     const totalWriters = await Users.countDocuments({ accountType: "Writer" });
     const followers = await Followers.countDocuments();
-    const totalViews = Views ? await Views.countDocuments() : 0;
+
+    // Total engaged views: prefer summing the `engagedViews` on posts for performance
+    const agg = await Posts.aggregate([
+      { $match: { status: true, approved: true } },
+      { $group: { _id: null, total: { $sum: { $ifNull: ["$engagedViews", 0] } } } }
+    ]);
+    const totalViews = Array.isArray(agg) && agg[0] ? agg[0].total : 0;
 
     // 2. This creates an array of last 28 days with 0 views (or real data if you have it)
     const last28Days = Array.from({ length: 28 }, (_, i) => {
@@ -405,9 +411,27 @@ router.get('/analytics', adminAuth, accessLog(), async (req, res) => {
       return d.toISOString().split('T')[0]; // Format: "YYYY-MM-DD"
     });
 
+    // Build per-day engaged view counts using EngagementSession (counted = true)
+    const startDateObj = new Date();
+    startDateObj.setDate(startDateObj.getDate() - 27);
+    const sessions = await EngagementSession.aggregate([
+      { $match: { counted: true, createdAt: { $gte: startDateObj } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const sessionMap = new Map();
+    sessions.forEach(s => sessionMap.set(s._id, s.count || 0));
+
     const viewStats = last28Days.map(date => ({
       date: date,
-      views: 0 // TODO: Replace this 0 with a real DB query for views per day if available
+      views: sessionMap.get(date) || 0
     }));
 
     // 3. Send Response
