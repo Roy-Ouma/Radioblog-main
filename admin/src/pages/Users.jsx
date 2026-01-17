@@ -15,7 +15,11 @@ const Users = () => {
     setLoading(true);
     try {
       const { data } = await axios.get(`${API_URI}/users/get-user`);
-      if (data?.success) setUsers(data.users || []);
+      if (data?.success) {
+        // Only show users who signed up as Writers or Admins in admin Users tab
+        const filtered = (data.users || []).filter(u => (u.accountType === 'Writer' || u.accountType === 'Admin'));
+        setUsers(filtered);
+      }
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message || "Failed to load users");
     } finally {
@@ -163,7 +167,7 @@ const Users = () => {
 
   return (
     <div className="w-full h-full flex flex-col p-6">
-      <h2 className="section-header">User Management</h2>
+      <h2 className="section-header">Writers & Admins</h2>
 
       {loading ? (
         <div className="flex items-center justify-center py-16 section-container"><Loader /></div>
@@ -180,7 +184,7 @@ const Users = () => {
             </Table.Thead>
             <Table.Tbody>
               {users?.length === 0 && (
-                <tr><td colSpan={4}><Text className="text-center text-slate-600 dark:text-slate-400">No users found</Text></td></tr>
+                <tr><td colSpan={4}><Text className="text-center text-slate-600 dark:text-slate-400">No writers or admins found</Text></td></tr>
               )}
               {users?.map((u) => (
                 <Table.Tr key={u._id} className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">

@@ -49,7 +49,7 @@ const Dashboard = () => {
       {/* 2. Graph Section */}
       <div className='w-full py-8'>
         <p className='py-5 text-base font-medium'>
-          View Stats for last 28 days
+          Engaged Views — Last 28 days
         </p>
         <Graph dt={data?.viewStats} />
       </div>

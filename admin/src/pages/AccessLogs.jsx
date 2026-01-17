@@ -3,7 +3,7 @@ import axios from "axios";
 import useStore from "../store";
 import { API_URI } from "../utils";
 import { toast } from "sonner";
-import { Pagination, Badge } from "@mantine/core";
+import { Pagination, Badge, Table, Text, Loader } from "@mantine/core";
 
 const AccessLogs = () => {
   const user = useStore((s) => s.user);
@@ -40,71 +40,50 @@ const AccessLogs = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, token]);
 
+  const rows = logs.map((log) => (
+    <Table.Tr key={log._id} className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+      <Table.Td className="text-sm">{new Date(log.createdAt).toLocaleString()}</Table.Td>
+      <Table.Td className="text-sm">{log.userId?.name || log.userId || '—'}</Table.Td>
+      <Table.Td className="text-sm font-mono">{log.method}</Table.Td>
+      <Table.Td className="text-sm">{log.route}</Table.Td>
+      <Table.Td className="text-sm"><Badge size="xs" color={log.success ? 'green' : 'red'}>{log.success ? 'Success' : 'Failed'}</Badge></Table.Td>
+      <Table.Td className="text-sm">{log.ip || '—'}</Table.Td>
+      <Table.Td className="text-sm">{log.userAgent ? log.userAgent.slice(0, 80) + (log.userAgent.length > 80 ? '…' : '') : '—'}</Table.Td>
+    </Table.Tr>
+  ));
+
   return (
     <div className="w-full h-full flex flex-col p-6">
       <h2 className="section-header">Access Logs</h2>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-        Total: {total} logs
-        {logs.length ? ` • Showing ${(page - 1) * limit + 1}-${Math.min(page * limit, total)}` : ""}
-      </p>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Total: {total} logs {logs.length ? ` • Showing ${(page - 1) * limit + 1}-${Math.min(page * limit, total)}` : ""}</p>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16 section-container">
-          <div className="text-slate-600 dark:text-slate-400">Loading access logs...</div>
-        </div>
+        <div className="flex items-center justify-center py-16 section-container"><Loader /></div>
       ) : logs.length === 0 ? (
-        <div className="section-container text-center py-16">
-          <p className="muted">No access logs found.</p>
-        </div>
+        <div className="section-container text-center py-16"><Text className="text-slate-600 dark:text-slate-400">No access logs found.</Text></div>
       ) : (
-        <div className="space-y-4 flex-1 overflow-y-auto">
-          {logs.map((log) => (
-            <div key={log._id} className="section-container group hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <span className="text-sm font-mono text-slate-900 dark:text-white">
-                      {log.method} {log.route}
-                    </span>
-                    <Badge
-                      size="sm"
-                      variant="light"
-                      color={log.success ? "green" : "red"}
-                    >
-                      {log.success ? "Success" : "Failed"}
-                    </Badge>
-                  </div>
-                  <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                    IP: {log.ip || "Unknown"} • User-Agent: {log.userAgent ? log.userAgent.slice(0, 100) : "Unknown"}
-                  </div>
-                  {log.userId && (
-                    <div className="text-sm text-slate-600 dark:text-slate-400">
-                      User: {log.userId?.name || log.userId} ({log.userId?.email || ""})
-                    </div>
-                  )}
-                  {log.meta && Object.keys(log.meta).length > 0 && (
-                    <div className="text-sm text-slate-600 dark:text-slate-400">
-                      Meta: {JSON.stringify(log.meta)}
-                    </div>
-                  )}
-                </div>
-                <div className="text-sm muted text-right flex-shrink-0 min-w-max">
-                  <div className="text-xs">
-                    {new Date(log.createdAt).toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="table-container overflow-x-auto space-y-4 flex-1">
+          <Table highlightOnHover withTableBorder>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th className="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white">Time</Table.Th>
+                <Table.Th className="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white">User</Table.Th>
+                <Table.Th className="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white">Method</Table.Th>
+                <Table.Th className="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white">Route</Table.Th>
+                <Table.Th className="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white">Status</Table.Th>
+                <Table.Th className="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white">IP</Table.Th>
+                <Table.Th className="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white">User Agent</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {rows}
+            </Table.Tbody>
+          </Table>
         </div>
       )}
 
       <div className="mt-6 flex items-center justify-center section-container">
-        <Pagination
-          total={Math.max(1, Math.ceil(total / limit))}
-          page={page}
-          onChange={(p) => setPage(p)}
-        />
+        <Pagination total={Math.max(1, Math.ceil(total / limit))} page={page} onChange={(p) => setPage(p)} />
       </div>
     </div>
   );

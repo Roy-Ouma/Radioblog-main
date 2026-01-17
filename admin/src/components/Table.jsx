@@ -72,7 +72,7 @@ export const RecentPostTable = ({ data, theme }) => {
           <span className='text-[10px] text-rose-600'>{el?.cat}</span>
         </>
       </Table.Td>
-      <Table.Td>{formatNumber(el?.views.length)}</Table.Td>
+      <Table.Td>{formatNumber(el?.engagedViews ?? el?.views?.length ?? 0)}</Table.Td>
       <Table.Td>{moment(el?.createdAt).fromNow()}</Table.Td>
     </Table.Tr>
   ));
@@ -82,7 +82,7 @@ export const RecentPostTable = ({ data, theme }) => {
       <Table.Thead>
         <Table.Tr>
           <Table.Th>Post Title</Table.Th>
-          <Table.Th>Views</Table.Th>
+          <Table.Th>Engaged Views</Table.Th>
           <Table.Th>Post Date</Table.Th>
         </Table.Tr>
       </Table.Thead>

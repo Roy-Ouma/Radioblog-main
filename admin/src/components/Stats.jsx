@@ -27,7 +27,7 @@ const Stats = ({ dt }) => {
       diff: dt?.followersDiff ?? 0,
     },
     {
-      title: "TOTAL VIEWS",
+      title: "ENGAGED VIEWS",
       icon: "view",
       value: formatNumber(dt?.totalViews ?? 0),
       diff: dt?.viewsDiff ?? 0,
@@ -66,7 +66,7 @@ const Stats = ({ dt }) => {
             </Group>
 
             <Text fz="xs" c="dimmed" mt={7}>
-              Compared to previous month
+              Compared to previous period
             </Text>
           </Paper>
         );

@@ -49,7 +49,7 @@ const Contents = () => {
         case 'title':
           return a.title.localeCompare(b.title);
         case 'views':
-          return (b.views?.length || 0) - (a.views?.length || 0);
+          return (b.engagedViews || b.views?.length || 0) - (a.engagedViews || a.views?.length || 0);
         default:
           return 0;
       }
@@ -139,7 +139,7 @@ const Contents = () => {
                 { value: 'newest', label: 'Newest First' },
                 { value: 'oldest', label: 'Oldest First' },
                 { value: 'title', label: 'Title A-Z' },
-                { value: 'views', label: 'Most Viewed' },
+                { value: 'views', label: 'Top Engaged' },
               ]}
               value={sortBy}
               onChange={(value) => {
@@ -154,7 +154,7 @@ const Contents = () => {
                     case 'title':
                       return a.title.localeCompare(b.title);
                     case 'views':
-                      return (b.views?.length || 0) - (a.views?.length || 0);
+                      return (b.engagedViews || b.views?.length || 0) - (a.engagedViews || a.views?.length || 0);
                     default:
                       return 0;
                   }
@@ -212,7 +212,7 @@ const Contents = () => {
                     <div className="flex flex-wrap gap-4 text-sm">
                       <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
                         <AiOutlineEye size={16} />
-                        <span>{formatNumber(post.views?.length || 0)} views</span>
+                        <span>{formatNumber(post.engagedViews ?? post.views?.length ?? 0)} engaged</span>
                       </div>
                       <div
                         onClick={() => handleComment(post._id, post.comments?.length || 0)}
