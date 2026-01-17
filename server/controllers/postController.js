@@ -442,12 +442,7 @@ export const getPopularContents = async (req, res, next) => {
   try {
     const posts = await Posts.aggregate([
       { $match: { status: true, approved: true } },
-      {
-        $addFields: {
-          viewsCount: { $size: { $ifNull: ["$views", []] } }
-        }
-      },
-      { $sort: { viewsCount: -1 } },
+      { $sort: { engagedViews: -1 } },
       { $limit: 5 },
       {
         $lookup: {
@@ -465,20 +460,20 @@ export const getPopularContents = async (req, res, next) => {
           slug: 1,
           img: 1,
           cat: 1,
-          views: '$viewsCount',
+          views: '$engagedViews',
           createdAt: 1,
           user: { _id: '$user._id', name: '$user.name', image: '$user.image' }
         }
       }
     ]);
 
-    // Aggregate writers by total post views (sum of views across their posts)
+    // Aggregate writers by total post engagedViews (sum of engagedViews across their posts)
     const writers = await Posts.aggregate([
       { $match: { status: true, approved: true } },
       {
         $group: {
           _id: '$user',
-          totalViews: { $sum: { $size: { $ifNull: ["$views", []] } } },
+          totalViews: { $sum: '$engagedViews' },
           postCount: { $sum: 1 }
         }
       },

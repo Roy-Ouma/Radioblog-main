@@ -71,7 +71,7 @@ const Card = ({ post, index }) => {
         <div className='flex items-center gap-4 mt-2'>
           <div className='flex items-center gap-2 text-sm text-gray-600 dark:text-slate-400'>
             <FaEye className='w-4 h-4 text-gray-600 dark:text-slate-300' />
-            <span className='font-medium'>{post?.views?.length || 0}</span>
+            <span className='font-medium'>{post?.engagedViews || 0}</span>
           </div>
           <div className='flex items-center gap-2 text-sm text-gray-600 dark:text-slate-400'>
             <FaRegComments className='w-4 h-4 text-gray-600 dark:text-slate-300' />

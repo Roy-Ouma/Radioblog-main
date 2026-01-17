@@ -1,9 +1,9 @@
 import rateLimit from 'express-rate-limit';
 
-// Global rate limiter: 100 requests per 15 minutes
+// Global rate limiter: 200 requests per 15 minutes
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 200,
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -54,10 +54,10 @@ export const createPostLimiter = rateLimit({
   skip: (req) => process.env.NODE_ENV !== 'production',
 });
 
-// Engagement tracking rate limiter: 20 per hour per IP (to prevent abuse)
+// Engagement tracking rate limiter: 50 per hour per IP (to prevent abuse)
 export const engagementLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 20,
+  max: 50,
   message: 'Too many engagement requests, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,

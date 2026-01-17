@@ -89,7 +89,7 @@ const SearchResults = ({
             <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
               <div className="flex items-center gap-1">
                 <FaEye className="w-3 h-3" />
-                <span>{post?.views?.length || post?.viewsCount || 0}</span>
+                <span>{post?.engagedViews || 0}</span>
               </div>
               <div className="flex items-center gap-1">
                 <FaRegComments className="w-3 h-3" />

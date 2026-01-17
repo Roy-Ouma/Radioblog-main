@@ -278,7 +278,7 @@ const FactCheckList = () => {
                             {post.title}
                           </h4>
                           <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                            <span>{formatNumber(post.views || 0)} views</span>
+                            <span>{formatNumber(post.engagedViews || 0)} views</span>
                             <span>•</span>
                             <span>{moment(post.createdAt).fromNow()}</span>
                           </div>
