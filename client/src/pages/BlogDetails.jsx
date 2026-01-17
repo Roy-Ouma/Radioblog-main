@@ -6,6 +6,7 @@ import useStore from "../store";
 import { fetchPopularContent, fetchPostById, fetchWriterById, logShare, recordEngagedView } from "../utils/apiCalls";
 import PopularPost from "../components/PopularPost";
 import PopularWriter from "../components/PopularWriter";
+import SEO from '../components/SEO';
 import { fetchCategories } from "../utils/apiCalls";
 import PostComments from "../components/PostComments";
 import { FaTwitter, FaFacebookF, FaWhatsapp } from 'react-icons/fa';
@@ -200,7 +201,29 @@ const BlogDetails = () => {
   }
 
   return (
-    <div className="w-full px-4 md:px-10 2xl:px-20 py-8 md:py-12 2xl:py-16 space-y-12">
+    <>
+      <SEO
+        title={post?.seoTitle || post?.title}
+        description={post?.seoDescription || post?.desc?.slice(0, 160)}
+        canonical={post?.canonicalUrl || `${process.env.REACT_APP_SITE_BASE || ''}/${post?.slug}/${post?._id}`}
+        image={post?.socialImage || post?.img}
+        author={post?.user?.name}
+        publishedAt={post?.createdAt}
+        updatedAt={post?.updatedAt}
+        tags={post?.tags || []}
+        noIndex={post?.noIndex}
+        structuredData={post?.structuredDataOverride || {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": post?.title,
+          "image": [post?.socialImage || post?.img],
+          "datePublished": post?.createdAt,
+          "dateModified": post?.updatedAt || post?.createdAt,
+          "author": { "@type": "Person", "name": post?.user?.name || 'Author' },
+          "publisher": { "@type": "Organization", "name": process.env.REACT_APP_SITE_NAME || 'Radioblog' }
+        }}
+      />
+      <div className="w-full px-4 md:px-10 2xl:px-20 py-8 md:py-12 2xl:py-16 space-y-12">
       {/* Hero Section - Article Header */}
       <section className="space-y-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <div className="flex flex-col justify-center gap-6 order-2 md:order-1">
@@ -332,6 +355,7 @@ const BlogDetails = () => {
         </div>
       </div>
     </div>
+  </>
   );
 };
 

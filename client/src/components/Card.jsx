@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AiOutlineArrowRight } from "react-icons/ai"
 import { FaEye, FaRegComments } from 'react-icons/fa';
+import LazyImage from './LazyImage';
 
 const Card = ({ post, index }) => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const Card = ({ post, index }) => {
     >
       {/* Image Container */}
       <div className='w-full md:w-2/5 h-48 md:h-56 overflow-hidden'>
-        <img
+        <LazyImage
           src={post?.img}
           alt={post?.title}
           className='object-cover w-full h-full hover:scale-110 transition-transform duration-500'

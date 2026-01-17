@@ -4,6 +4,7 @@ import App from "./App";
 import "./index.css";
 import { BrowserRouter }from "react-router-dom";
 import { GoogleOAuthProviderSafe } from "./components/GoogleOAuthProviderSafe";
+import { HelmetProvider } from 'react-helmet-async';
 
 const rawClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 const clientId = rawClientId ? rawClientId.trim() : rawClientId;
@@ -15,7 +16,9 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 const AppWithProviders = () => {
   return (
     <GoogleOAuthProviderSafe clientId={clientId}>
-      <App />
+      <HelmetProvider>
+        <App />
+      </HelmetProvider>
     </GoogleOAuthProviderSafe>
   );
 };
