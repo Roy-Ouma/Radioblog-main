@@ -22,6 +22,7 @@ import {
   setFeaturedPost,
   removeFeaturedPost,
   recordEngagedView,
+  getPostMeta,
 } from '../controllers/postController.js';
 import { createShortLink } from '../controllers/shareController.js';
 import { getShareLink } from '../controllers/postController.js';
@@ -55,6 +56,8 @@ router.get("/popular", getPopularContents);
 router.get("/banners", getActiveBanners);
 router.get('/share-link/:id', getShareLink);
 router.post('/short-link/:id', createShortLink);
+// SEO meta endpoint (by slug or id)
+router.get('/meta/:slugOrId', getPostMeta);
 router.get("/:id", getPost);
 router.get("/comments/:postId", getComments);
 

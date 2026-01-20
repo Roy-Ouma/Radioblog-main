@@ -26,6 +26,7 @@ import { BiImages } from "react-icons/bi";
 import { Toaster, toast } from "sonner";
 import Loading from "../components/Loading";
 import { useCreatePost } from "../hooks/post-hook";
+import { Textarea, Checkbox } from '@mantine/core';
 
 const WritePost = () => {
   const { colorScheme } = useMantineColorScheme();
@@ -37,6 +38,11 @@ const WritePost = () => {
   const [category, setCategory] = useState("NEWS");
   const [title, setTitle] = useState("");
   const [fileURL, setFileURL] = useState("");
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [seoKeywords, setSeoKeywords] = useState("");
+  const [canonicalUrl, setCanonicalUrl] = useState("");
+  const [noIndex, setNoIndex] = useState(false);
   const [uploadPreview, setUploadPreview] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -93,6 +99,13 @@ const WritePost = () => {
       cat: category,
       img: fileURL,
       desc: editor.getHTML(),
+      // SEO fields
+      seoTitle,
+      seoDescription,
+      seoKeywords,
+      socialImage: fileURL,
+      canonicalUrl,
+      noIndex,
     });
   };
 
@@ -127,11 +140,12 @@ const WritePost = () => {
     setIsUploading(true);
 
     try {
-      const url = await uploadFile(selectedFile, {
+      const result = await uploadFile(selectedFile, {
         onProgress: (progress) => setUploadProgress(progress),
       });
       setUploadProgress(100);
       setUploadError("");
+      const url = typeof result === 'string' ? result : result.url;
       setFileURL(url);
       setUploadPreview(url);
     } catch (error) {
@@ -199,6 +213,41 @@ const WritePost = () => {
               <span className='text-sm text-green-600'>Upload complete.</span>
             )}
           </div>
+        </div>
+
+        {/* SEO Fields */}
+        <div className='w-full flex flex-col gap-4 mt-4'>
+          <TextInput
+            label='Meta Title'
+            placeholder='Optional SEO title'
+            value={seoTitle}
+            onChange={(e) => setSeoTitle(e.target.value)}
+          />
+
+          <Textarea
+            label='Meta Description'
+            placeholder='Optional meta description (max ~160 chars)'
+            value={seoDescription}
+            onChange={(e) => setSeoDescription(e.target.value)}
+            minRows={2}
+            maxRows={4}
+          />
+
+          <TextInput
+            label='Meta Keywords (comma separated)'
+            placeholder='keyword1, keyword2, keyword3'
+            value={seoKeywords}
+            onChange={(e) => setSeoKeywords(e.target.value)}
+          />
+
+          <TextInput
+            label='Canonical URL (optional)'
+            placeholder='https://yourdomain.com/slug/123'
+            value={canonicalUrl}
+            onChange={(e) => setCanonicalUrl(e.target.value)}
+          />
+
+          <Checkbox label='No index (do not index this page)' checked={noIndex} onChange={(e) => setNoIndex(e.currentTarget.checked)} />
         </div>
 
         {editor && (

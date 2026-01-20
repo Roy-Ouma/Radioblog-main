@@ -1,4 +1,5 @@
 import { Table } from "@mantine/core";
+import LazyImage from './LazyImage';
 import { formatNumber, getInitials } from "../utils";
 import moment from "moment";
 
@@ -7,7 +8,7 @@ export const RecentFollowerTable = ({ data, theme }) => {
     <Table key={_id} className={theme ? "text-gray-400" : "text-slate-600"}>
       <Table.Td className='flex gap-2 items-center'>
         {follower?.image ? (
-          <img
+          <LazyImage
             src={follower.image}
             alt={follower.name}
             className='w-10 h-10 rounded-full object-cover'
@@ -61,7 +62,7 @@ export const RecentPostTable = ({ data, theme }) => {
       className={theme ? "text-gray-400" : "text-slate-600"}
     >
       <Table.Td className='flex gap-2 items-center'>
-        <img
+        <LazyImage
           src={el?.img}
           alt={el?.title}
           className='w-10 h-10 rounded-full object-conver'
@@ -72,6 +73,7 @@ export const RecentPostTable = ({ data, theme }) => {
           <span className='text-[10px] text-rose-600'>{el?.cat}</span>
         </>
       </Table.Td>
+      <Table.Td className='text-sm'>{el?.user?.name || el?.authorName || '—'}</Table.Td>
       <Table.Td>{formatNumber(el?.engagedViews ?? el?.views?.length ?? 0)}</Table.Td>
       <Table.Td>{moment(el?.createdAt).fromNow()}</Table.Td>
     </Table.Tr>
@@ -82,6 +84,7 @@ export const RecentPostTable = ({ data, theme }) => {
       <Table.Thead>
         <Table.Tr>
           <Table.Th>Post Title</Table.Th>
+          <Table.Th>Author</Table.Th>
           <Table.Th>Engaged Views</Table.Th>
           <Table.Th>Post Date</Table.Th>
         </Table.Tr>

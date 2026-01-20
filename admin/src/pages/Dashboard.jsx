@@ -7,7 +7,7 @@ import clsx from "clsx";
 // Components
 import Stats from "../components/Stats";
 import Graph from "../components/Graph";
-import { RecentFollowerTable, RecentPostTable } from "../components/Table";
+import { RecentPostTable } from "../components/Table";
 import Loading from "../components/Loading";
 
 // Store & API
@@ -56,7 +56,7 @@ const Dashboard = () => {
 
       {/* 3. Tables Section */}
       <div className='flex gap-6 flex-col md:flex-row py-6'>
-        {/* Recent Followers */}
+        {/* Trending Posts (Top 5) */}
         <div className='w-full md:w-1/3 flex flex-col'>
           <span
             className={clsx(
@@ -64,9 +64,9 @@ const Dashboard = () => {
               theme ? "text-white" : "text-slate-600"
             )}
           >
-            Recent Followers
+            Top 5 Trending
           </span>
-          <RecentFollowerTable data={data?.last5Followers} theme={theme} />
+          <RecentPostTable data={data?.trendingPosts} theme={theme} />
         </div>
 
         {/* Recent Content */}

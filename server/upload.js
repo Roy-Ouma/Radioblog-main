@@ -238,7 +238,84 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
   const publicUrl = `${req.protocol}://${req.get("host")}/uploads/${encodeURIComponent(filename)}`;
 
-  return res.json({ url: publicUrl });
+  // Attempt to create responsive variants (webp) using sharp if available
+  const isImage = String(file.mimetype || '').startsWith('image/');
+  const sizes = [320, 640, 1024, 1600];
+  const webpUrls = [];
+  const srcsetEntries = [];
+
+  if (isImage) {
+    try {
+      const sharpModule = await import('sharp');
+      const sharp = sharpModule.default || sharpModule;
+
+      for (const w of sizes) {
+        try {
+          const outBuf = await sharp(file.buffer).resize({ width: w }).webp({ quality: 80 }).toBuffer();
+          const sizedName = `${Date.now()}-${w}-${file.originalname.split('.').slice(0, -1).join('.')}.webp`;
+          const destPath = `uploads/${sizedName}`;
+
+          // upload the variant depending on backend
+          if (supabaseClient) {
+            try {
+              await supabaseClient.storage.from(SUPABASE_BUCKET).upload(destPath, outBuf, { cacheControl: '2592000', upsert: false, contentType: 'image/webp' });
+              const url = SUPABASE_PUBLIC
+                ? `${SUPABASE_URL.replace(/\/$/, '')}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURIComponent(destPath)}`
+                : (await supabaseClient.storage.from(SUPABASE_BUCKET).createSignedUrl(destPath, 60 * 60 * 24 * 7)).data.signedUrl;
+              webpUrls.push({ w, url });
+              continue;
+            } catch (err) {
+              // fallthrough to other backends
+            }
+          }
+
+          if (firebaseInitialized && admin.storage) {
+            try {
+              const bucketName = process.env.FIREBASE_STORAGE_BUCKET || getClientBucketFallback();
+              const b = admin.storage().bucket(bucketName);
+              const f = b.file(sizedName);
+              await f.save(outBuf, { metadata: { contentType: 'image/webp' }, resumable: false });
+              try {
+                await f.makePublic();
+                const url = `https://firebasestorage.googleapis.com/v0/b/${b.name}/o/${encodeURIComponent(f.name)}?alt=media`;
+                webpUrls.push({ w, url });
+                continue;
+              } catch (err) {
+                const [signedUrl] = await f.getSignedUrl({ action: 'read', expires: '03-09-2491' });
+                webpUrls.push({ w, url: signedUrl });
+                continue;
+              }
+            } catch (err) {
+              // fallthrough to local
+            }
+          }
+
+          // local fallback: write file and serve from /uploads
+          const localPath = path.join(UPLOAD_DIR, sizedName);
+          await fs.promises.writeFile(localPath, outBuf);
+          const url = `${req.protocol}://${req.get('host')}/uploads/${encodeURIComponent(sizedName)}`;
+          webpUrls.push({ w, url });
+        } catch (err) {
+          // ignore one variant failure
+          console.warn('image variant creation failed for width', w, err && err.message);
+        }
+      }
+
+      // Build srcset strings
+      if (webpUrls.length) {
+        webpUrls.sort((a, b) => a.w - b.w);
+        for (const e of webpUrls) srcsetEntries.push(`${e.url} ${e.w}w`);
+      }
+    } catch (err) {
+      // sharp not installed or failed — skip responsive generation
+      console.warn('sharp processing skipped:', err && err.message);
+    }
+  }
+
+  const responsePayload = { url: publicUrl };
+  if (srcsetEntries.length) responsePayload.webpSrcset = srcsetEntries.join(', ');
+
+  return res.json(responsePayload);
 });
 
 // Try to read client firebase config as a fallback for bucket name

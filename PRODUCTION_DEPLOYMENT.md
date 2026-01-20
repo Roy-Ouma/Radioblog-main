@@ -197,3 +197,23 @@ docker-compose ps                   # Check health status
 - **Metrics**: Add Prometheus scrape or APM (Sentry/New Relic)
 - **Alerts**: Configure uptime monitoring (Uptime Robot, PagerDuty)
 
+---
+
+## Image, Caching and CDN Recommendations
+
+- Use a CDN (Cloudflare, Fastly, AWS CloudFront, or BunnyCDN) in front of the server and object storage for images to offload traffic and improve latency globally.
+- Configure the CDN to cache `/uploads/*` and your client static build assets; set long TTLs for immutable assets and use cache invalidation on deploy.
+- Set Cache-Control headers for uploaded images (server already sets `Cache-Control: public, max-age=2592000, immutable` for common image extensions).
+- Serve modern image formats when possible (WebP/AVIF) and generate multiple sizes for responsive `srcset`.
+- Use native lazy loading (`loading="lazy"`) for images below the fold and `decoding="async"` to reduce main-thread work. Small `LazyImage` helper components can centralize behavior.
+- Consider an image-optimization pipeline or third-party service (Thumbor, Imgix, Cloudinary) to deliver optimized sizes and formats per-device.
+- For HTML and API responses, add `Cache-Control` and `ETag` where appropriate and allow CDNs to honor these headers.
+
+Quick checklist for rollout:
+
+1. Ensure `uploads` are stored on object storage (S3-compatible) and served via CDN.
+2. Keep `Cache-Control` on static and asset routes; use `immutable` for hashed assets.
+3. Replace heavy inline images with responsive `srcset` or an image service.
+4. Verify lazy-loading behavior in Lighthouse and fix any layout-shift issues by reserving image aspect-ratio boxes.
+
+

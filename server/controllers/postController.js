@@ -229,6 +229,14 @@ export const createPost = async (req, res, next) => {
       slug,
       img: req.file?.path || req.body?.img,
       status: status ?? false,
+      // Accept SEO fields from admin form if provided
+      seoTitle: req.body?.seoTitle || '',
+      seoDescription: req.body?.seoDescription || '',
+      seoKeywords: Array.isArray(req.body?.seoKeywords) ? req.body.seoKeywords : (req.body?.seoKeywords ? String(req.body.seoKeywords).split(',').map(s=>s.trim()).filter(Boolean) : []),
+      socialImage: req.body?.socialImage || '',
+      canonicalUrl: req.body?.canonicalUrl || '',
+      noIndex: req.body?.noIndex === 'true' || req.body?.noIndex === true ? true : false,
+      structuredDataOverride: req.body?.structuredDataOverride ? JSON.parse(String(req.body.structuredDataOverride)) : null,
     });
 
     await post.save();
@@ -836,5 +844,45 @@ export const recordEngagedView = async (req, res) => {
   } catch (error) {
     console.error('recordEngagedView error', error);
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// GET /api/posts/meta/:slugOrId - return compact SEO meta for a post
+export const getPostMeta = async (req, res, next) => {
+  try {
+    const { slugOrId } = req.params;
+    let post = null;
+
+    // Try by id then by slug
+    if (/^[0-9a-fA-F]{24}$/.test(slugOrId)) {
+      post = await Posts.findById(slugOrId).populate({ path: 'user', select: 'name' }).lean();
+    }
+
+    if (!post) {
+      post = await Posts.findOne({ slug: slugOrId }).populate({ path: 'user', select: 'name' }).lean();
+    }
+
+    if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
+
+    const FRONTEND_URL = (process.env.FRONTEND_URL || '').replace(/\/$/, '');
+    const canonical = post.canonicalUrl || (FRONTEND_URL ? `${FRONTEND_URL}/${post.slug}/${post._id}` : `/${post.slug}/${post._id}`);
+
+    const meta = {
+      title: post.seoTitle || post.title,
+      description: post.seoDescription || (post.desc ? post.desc.slice(0, 160) : ''),
+      canonical,
+      image: post.socialImage || post.img || null,
+      author: post.user?.name || null,
+      publishedAt: post.createdAt,
+      updatedAt: post.updatedAt || post.createdAt,
+      tags: post.tags || [],
+      noIndex: !!post.noIndex,
+      structuredData: post.structuredDataOverride || null,
+    };
+
+    return res.json({ success: true, meta });
+  } catch (err) {
+    console.error('getPostMeta error', err);
+    return res.status(500).json({ success: false, message: 'Unable to fetch meta' });
   }
 };

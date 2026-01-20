@@ -1,4 +1,25 @@
 import express from 'express';
+const router = express.Router();
+
+// POST /api/admin/posts/:id/seo - save SEO fields for a post (admin only)
+router.post('/posts/:id/seo', adminAuth, accessLog(), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { seoTitle, seoDescription, seoKeywords, socialImage, canonicalUrl, noIndex, structuredDataOverride } = req.body;
+    const Posts = (await import('../models/Posts.js')).default;
+    const update = {
+      seoTitle, seoDescription, seoKeywords, socialImage, canonicalUrl, noIndex, structuredDataOverride
+    };
+    const post = await Posts.findByIdAndUpdate(id, update, { new: true });
+    if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
+    // regenerate sitemap in background
+    try { const { generateSitemap } = await import('../utils/sitemap.js'); generateSitemap().catch(()=>{}); } catch(e){}
+    return res.json({ success: true, data: post });
+  } catch (err) {
+    console.error('POST /admin/posts/:id/seo error', err);
+    return res.status(500).json({ success: false, message: 'Unable to save seo' });
+  }
+});
 import { adminAuth, generalAdminAuth } from '../middleware/adminAuth.js';
 import { accessLog } from '../middleware/accessLogMiddleware.js';
 import AccessLog from '../models/AccessLog.js';
@@ -10,8 +31,6 @@ import { createCategory, updateCategory, deleteCategory } from '../controllers/c
 import { createPodcast as adminCreatePodcast, adminGetPodcasts, updatePodcast, deletePodcast } from '../controllers/podcastController.js';
 import { createShow, getShows as adminGetShows, updateShow, deleteShow } from '../controllers/showController.js';
 import { createEpisode, updateEpisode, deleteEpisode } from '../controllers/episodeController.js';
-
-const router = express.Router();
 
 // GET /api/admin/logs - general admin only
 router.get('/logs', generalAdminAuth, accessLog(), async (req, res) => {
@@ -116,6 +135,11 @@ router.post('/posts/:id/approve', generalAdminAuth, accessLog(), async (req, res
       // ignore
     }
     await post.save();
+    // regenerate sitemap asynchronously (best-effort)
+    try {
+      const { generateSitemap } = await import('../utils/sitemap.js');
+      generateSitemap().catch(() => {});
+    } catch (e) {}
     return res.json({ success: true, message: 'Post approved' });
   } catch (err) {
     console.error('approve post error', err);
@@ -136,6 +160,10 @@ router.post('/posts/:id/unapprove', generalAdminAuth, accessLog(), async (req, r
     post.approvedBy = undefined;
     post.approvedAt = undefined;
     await post.save();
+    try {
+      const { generateSitemap } = await import('../utils/sitemap.js');
+      generateSitemap().catch(() => {});
+    } catch (e) {}
     return res.json({ success: true, message: 'Post unapproved' });
   } catch (err) {
     console.error('unapprove post error', err);
@@ -176,6 +204,10 @@ router.patch('/posts/:id', adminAuth, accessLog(), async (req, res) => {
     }
 
     const updated = await post.save();
+    try {
+      const { generateSitemap } = await import('../utils/sitemap.js');
+      generateSitemap().catch(() => {});
+    } catch (e) {}
     return res.json({ 
       success: true, 
       message: 'Post updated successfully',
@@ -435,6 +467,21 @@ router.get('/analytics', adminAuth, accessLog(), async (req, res) => {
     }));
 
     // 3. Send Response
+    // Fetch last 5 posts (most recent) and top 5 trending by engagedViews
+    const last5Posts = await Posts.find({ status: true })
+      .select('title slug img cat engagedViews createdAt user')
+      .populate({ path: 'user', select: 'name' })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
+    const trendingPosts = await Posts.find({ status: true, approved: true })
+      .select('title slug img cat engagedViews createdAt user')
+      .populate({ path: 'user', select: 'name' })
+      .sort({ engagedViews: -1 })
+      .limit(5)
+      .lean();
+
     res.status(200).json({
       totalPosts,
       followers,
@@ -444,7 +491,9 @@ router.get('/analytics', adminAuth, accessLog(), async (req, res) => {
       followersDiff: 0,
       viewsDiff: 0,
       writersDiff: 0,
-      viewStats: viewStats
+      viewStats: viewStats,
+      last5Posts,
+      trendingPosts
     });
 
   } catch (error) {

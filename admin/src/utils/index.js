@@ -30,7 +30,8 @@ export const uploadFile = async (file, { onProgress } = {}) => {
 
     const data = await res.json();
     onProgress?.(100);
-    return data.url;
+    // Return full response so callers can use responsive srcsets (data.webpSrcset)
+    return data;
   } catch (err) {
     console.error("uploadFile error:", err);
     throw err;

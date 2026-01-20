@@ -124,7 +124,8 @@ const Users = () => {
     try {
       let imageUrl = editingUser.image;
       if (editFile) {
-        imageUrl = await uploadFile(editFile);
+        const uploadRes = await uploadFile(editFile);
+        imageUrl = (typeof uploadRes === "string") ? uploadRes : (uploadRes?.url || uploadRes?.data?.url || uploadRes);
       }
 
       const payload = { name: editName?.trim(), image: imageUrl };

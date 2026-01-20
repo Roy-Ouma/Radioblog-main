@@ -54,7 +54,8 @@ const Banners = () => {
     if (!file) return;
     setIsUploading(true);
     try {
-      const url = await uploadFile(file);
+      const result = await uploadFile(file);
+      const url = typeof result === 'string' ? result : result.url;
       setFormData((prev) => ({ ...prev, image: url }));
       toast.success('Image uploaded');
     } catch (err) {

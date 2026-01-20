@@ -117,6 +117,20 @@ app.use(
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     next();
   },
+  // Add Cache-Control headers for image/static assets to improve CDN and browser caching.
+  (req, res, next) => {
+    // Set a long cache for images and static assets. Can be overridden per-file by CDN or upload pipeline.
+    const ext = (req.path || '').split('.').pop().toLowerCase();
+    const longCache = 60 * 60 * 24 * 30; // 30 days
+    const shortCache = 60 * 5; // 5 minutes
+
+    if (['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif', 'svg'].includes(ext)) {
+      res.setHeader('Cache-Control', `public, max-age=${longCache}, immutable`);
+    } else {
+      res.setHeader('Cache-Control', `public, max-age=${shortCache}`);
+    }
+    next();
+  },
   express.static(path.join(process.cwd(), "uploads"))
 );
 app.use("/api/storage", uploadRouter);
@@ -126,6 +140,32 @@ app.use("/api/storage", uploadRouter);
 app.use("/api", router);
 
 app.get("/", (req, res) => res.send("Server running"));
+
+// Serve robots.txt
+app.get('/robots.txt', (req, res) => {
+  const host = (process.env.FRONTEND_URL || '').replace(/\/$/, '') || 'http://localhost:3000';
+  const lines = [
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /admin/',
+    'Disallow: /api/admin/',
+    'Sitemap: ' + host + '/sitemap.xml'
+  ];
+  res.type('text/plain');
+  res.send(lines.join('\n'));
+});
+
+// Serve sitemap.xml and regenerate if missing/old
+import { generateSitemap } from './utils/sitemap.js';
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const sitemapPath = await generateSitemap();
+    return res.sendFile(sitemapPath);
+  } catch (err) {
+    console.error('sitemap generation error', err);
+    res.status(500).send('Unable to generate sitemap');
+  }
+});
 
 // Health check endpoint (for liveness probes)
 app.get("/health", (req, res) => {

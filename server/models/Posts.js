@@ -19,6 +19,14 @@ const postSchema = new mongoose.Schema({
   engagedViews: { type: Number, default: 0 },
   totalVisits: { type: Number, default: 0 },
   averageReadTime: { type: Number, default: 0 },
+  // SEO fields
+  seoTitle: { type: String, default: '' },
+  seoDescription: { type: String, default: '' },
+  seoKeywords: { type: [String], default: [] },
+  socialImage: { type: String, default: '' },
+  canonicalUrl: { type: String, default: '' },
+  noIndex: { type: Boolean, default: false },
+  structuredDataOverride: { type: Object, default: null },
 }, { timestamps: true });
 
 const Posts = mongoose.model("Posts", postSchema);

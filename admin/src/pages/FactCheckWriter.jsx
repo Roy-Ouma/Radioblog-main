@@ -158,9 +158,10 @@ const FactCheckWriter = () => {
     setUploadError("");
 
     try {
-      const url = await uploadFile(file, setUploadProgress);
+      const result = await uploadFile(file, setUploadProgress);
+      const url = typeof result === 'string' ? result : result.url;
       setFileURL(url);
-      setUploadPreview(URL.createObjectURL(file));
+      setUploadPreview(url);
     } catch (error) {
       setUploadError("Failed to upload image. Please try again.");
       console.error("Upload error:", error);
