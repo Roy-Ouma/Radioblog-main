@@ -53,13 +53,13 @@ const LatestPost = ({ posts = [] }) => {
                 >
                     {post.cat}
                     </span>
-                <Link to = {`/${post?.slug}/${post?._id}`} className='text-black dark:text-slate-300
+                <Link to = {`/${post?.slug}/${post?._id}`} className='text-black dark:text-slate-200
                 '>
                     {post?.title}
                 </Link>
 
                 <div className="flex gap-2 text-sm text-gray-500">
-                  <span className="font-medium text-slate-700 dark:text-slate-300">{post?.user?.name || "Anonymous"}</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-200">{post?.user?.name || "Anonymous"}</span>
                     <span className="">
                         {post?.createdAt ? new Date(post.createdAt).toDateString() : ""}
                     </span>

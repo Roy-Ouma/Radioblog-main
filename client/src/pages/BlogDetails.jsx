@@ -334,7 +334,7 @@ const BlogDetails = () => {
           <div className="sticky top-24 space-y-10">
               {/* Categories - always visible */}
               <div className="bg-white dark:bg-[#071020] shadow-sm rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Categories</h3>
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-500 mb-3">Categories</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {categories.map((cat) => (
                     <Link

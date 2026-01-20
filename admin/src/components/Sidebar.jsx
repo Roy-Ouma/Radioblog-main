@@ -134,26 +134,7 @@ const Sidebar = ({ close = () => {} }) => {
         'pt-4 border-t',
         theme ? 'border-slate-700/50' : 'border-slate-200'
       )}>
-        <ActionIcon
-          onClick={() =>
-            setColorScheme(colorScheme === "light" ? "dark" : "light")
-          }
-          variant='subtle'
-          size='lg'
-          aria-label='Toggle color scheme'
-          className={clsx(
-            'w-full rounded-lg transition-all',
-            theme
-              ? 'hover:bg-slate-700/50'
-              : 'hover:bg-slate-100/50'
-          )}
-        >
-          {colorScheme === "dark" ? (
-            <IconSun stroke={1.5} size={20} />
-          ) : (
-            <IconMoon stroke={1.5} size={20} />
-          )}
-        </ActionIcon>
+        {/* Theme toggle removed - admin defaults to dark mode */}
       </div>
     </nav>
   );

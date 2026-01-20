@@ -35,14 +35,14 @@ const PopularWriter = ({ data = [] }) => {
                 />
 
                 <div className="flex flex-col gap-1 flex-1 min-w-0">
-                  <span className="text-base font-semibold text-slate-800 dark:text-slate-300 truncate">
+                  <span className="text-base font-semibold text-slate-800 dark:text-slate-100 truncate">
                     {el?.name || "Unknown"}
                   </span>
 
                   <span className="text-sm font-medium flex items-center gap-1">
-                    <FaEye className="text-blue-600 dark:text-blue-400" size={14} />
-                    <span className="text-blue-600 dark:text-blue-400">{formatNumber(el?.totalViews || 0)}</span>
-                    <span className="text-gray-600 dark:text-slate-400">Views</span>
+                    <FaEye className="text-blue-600 dark:text-blue-500" size={14} />
+                    <span className="text-blue-600 dark:text-blue-500">{formatNumber(el?.totalViews || 0)}</span>
+                    <span className="text-gray-600 dark:text-slate-200">Views</span>
                   </span>
                 </div>
               </Link>

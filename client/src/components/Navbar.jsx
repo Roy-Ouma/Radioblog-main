@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 import useStore from "../store";
 import Logo from '../components/Logo';
-import ThemeSwitch from './Switch';
 import SearchResults from './SearchResults';
 import { searchPosts, isValidSearchTerm } from '../utils/searchUtils';
 import { fetchPosts } from '../utils/apiCalls';
@@ -202,9 +201,8 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Right: theme + sign-in + profile (desktop) */}
+        {/* Right: sign-in + profile (desktop) */}
         <div className="hidden md:flex items-center gap-4 ml-auto">
-          <ThemeSwitch />
           {!user?.token ? (
             <Link
               to="/sign-in"
@@ -288,7 +286,6 @@ const Navbar = () => {
               </div>
 
               <div className="mt-6 flex items-center gap-3">
-                <ThemeSwitch />
                 {!user?.token ? (
                   <Link
                     to="/sign-in"

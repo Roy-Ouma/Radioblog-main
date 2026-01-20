@@ -18,7 +18,7 @@ root.render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-          <MantineProvider>
+          <MantineProvider defaultColorScheme="dark">
             <App />
           </MantineProvider>
         </GoogleOAuthProvider>
